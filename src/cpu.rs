@@ -1,5 +1,6 @@
 use ops::Opcode;
 use ops::Reg;
+use ops::BigReg;
 use std::ops::Index;
 use std::ops::IndexMut;
 
@@ -40,12 +41,29 @@ impl Z80 {
             mem: [0;65536]
         }
     }
+
+    fn read_reg_pair(&self, reg1: Reg, reg2: Reg) -> u16 {
+        ((self.regs[reg1] as u16) << 8) + self.regs[reg2] as u16
+    }
+
+    fn read_big_reg(&self, reg: BigReg) -> u16 {
+        match reg {
+            BigReg::BC => self.read_reg_pair(Reg::B, Reg::C),
+            BigReg::DE => self.read_reg_pair(Reg::D, Reg::E),
+            BigReg::HL => self.read_reg_pair(Reg::H, Reg::L),
+            BigReg::SP => self.sp,
+            BigReg::IX => self.ix,
+            BigReg::IY => self.iy,
+            BigReg::AF => self.read_reg_pair(Reg::A, Reg::F),
+        }
+    }
+
     fn run_op(&mut self, op: Opcode) {
         match op {
             Opcode::LDRR(reg1, reg2) => self.regs[reg1] = self.regs[reg2],
             Opcode::LDRN(reg1, value) => self.regs[reg1] = value,
             Opcode::LDRHL(reg1) => {
-                let idx = ((self.regs[Reg::H] as u16) << 8) + self.regs[Reg::L] as u16;
+                let idx = self.read_reg_pair(Reg::H, Reg::L);
                 self.regs[reg1] = self.mem[idx as usize];
             },
             Opcode::LDRIXD(reg1, displacement) => {
@@ -57,7 +75,7 @@ impl Z80 {
                 self.regs[reg1] = self.mem[idx as usize];
             },
             Opcode::LDHLR(reg1) => {
-                let idx = ((self.regs[Reg::H] as u16) << 8) + self.regs[Reg::L] as u16;
+                let idx = self.read_reg_pair(Reg::H, Reg::L);
                 self.mem[idx as usize] = self.regs[reg1];
             },
             Opcode::LDIXDR(displacement, reg1) => {
@@ -69,7 +87,7 @@ impl Z80 {
                 self.mem[idx as usize] = self.regs[reg1];
             },
             Opcode::LDHLN(value) => {
-                let idx = ((self.regs[Reg::H] as u16) << 8) + self.regs[Reg::L] as u16;
+                let idx = self.read_reg_pair(Reg::H, Reg::L);
                 self.mem[idx as usize] = value;
             },
             Opcode::LDIXDN(displacement, value) => {
@@ -81,20 +99,20 @@ impl Z80 {
                 self.mem[idx as usize] = value;
             },
             Opcode::LDABC => {
-                let idx = ((self.regs[Reg::B] as u16) << 8) + self.regs[Reg::C] as u16;
+                let idx = self.read_reg_pair(Reg::B, Reg::C);
                 self.regs[Reg::A] = self.mem[idx as usize];
             },
             Opcode::LDADE => {
-                let idx = ((self.regs[Reg::D] as u16) << 8) + self.regs[Reg::E] as u16;
+                let idx = self.read_reg_pair(Reg::D, Reg::E);
                 self.regs[Reg::A] = self.mem[idx as usize];
             },
             Opcode::LDANN(idx) => self.regs[Reg::A] = self.mem[idx as usize],
             Opcode::LDBCA => {
-                let idx = ((self.regs[Reg::B] as u16) << 8) + self.regs[Reg::C] as u16;
+                let idx = self.read_reg_pair(Reg::B, Reg::C);
                 self.mem[idx as usize] = self.regs[Reg::A];
             },
             Opcode::LDDEA => {
-                let idx = ((self.regs[Reg::D] as u16) << 8) + self.regs[Reg::E] as u16;
+                let idx = self.read_reg_pair(Reg::D, Reg::E);
                 self.mem[idx as usize] = self.regs[Reg::A];
             },
             Opcode::LDNNA(idx) => self.mem[idx as usize] = self.regs[Reg::A],
