@@ -80,6 +80,28 @@ impl Z80 {
                 let idx = self.iy + displacement as u16;
                 self.mem[idx as usize] = value;
             },
+            Opcode::LDABC => {
+                let idx = ((self.regs[Reg::B] as u16) << 8) + self.regs[Reg::C] as u16;
+                self.regs[Reg::A] = self.mem[idx as usize];
+            },
+            Opcode::LDADE => {
+                let idx = ((self.regs[Reg::D] as u16) << 8) + self.regs[Reg::E] as u16;
+                self.regs[Reg::A] = self.mem[idx as usize];
+            },
+            Opcode::LDANN(idx) => self.regs[Reg::A] = self.mem[idx as usize],
+            Opcode::LDBCA => {
+                let idx = ((self.regs[Reg::B] as u16) << 8) + self.regs[Reg::C] as u16;
+                self.mem[idx as usize] = self.regs[Reg::A];
+            },
+            Opcode::LDDEA => {
+                let idx = ((self.regs[Reg::D] as u16) << 8) + self.regs[Reg::E] as u16;
+                self.mem[idx as usize] = self.regs[Reg::A];
+            },
+            Opcode::LDNNA(idx) => self.mem[idx as usize] = self.regs[Reg::A],
+            Opcode::LDAI => self.regs[Reg::A] = self.i,
+            Opcode::LDAR => self.regs[Reg::A] = self.r,
+            Opcode::LDIA => self.i = self.regs[Reg::A],
+            Opcode::LDRA => self.r = self.regs[Reg::A],
             _ => ()
         }
     }
@@ -191,5 +213,95 @@ mod test {
         cpu.iy = 0xA940;
         cpu.run_op(Opcode::LDIYDN(0x10, 0x97));
         assert!(cpu.mem[0xA950] == 0x97);
+    }
+
+    #[test]
+    fn test_run_ldabc() {
+        let mut cpu = Z80::new();
+        cpu.mem[0x4747] = 0x12;
+        cpu.regs[Reg::B] = 0x47;
+        cpu.regs[Reg::C] = 0x47;
+        cpu.run_op(Opcode::LDABC);
+        assert!(cpu.regs[Reg::A] == 0x12);
+    }
+
+    #[test]
+    fn test_run_ldade() {
+        let mut cpu = Z80::new();
+        cpu.mem[0x30A2] = 0x22;
+        cpu.regs[Reg::D] = 0x30;
+        cpu.regs[Reg::E] = 0xA2;
+        cpu.run_op(Opcode::LDADE);
+        assert!(cpu.regs[Reg::A] == 0x22);
+    }
+
+    #[test]
+    fn test_run_ldann() {
+        let mut cpu = Z80::new();
+        cpu.mem[0x8832] = 0x4;
+        cpu.run_op(Opcode::LDANN(0x8832));
+        assert!(cpu.regs[Reg::A] == 0x4);
+    }
+
+    #[test]
+    fn test_run_ldbca() {
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::A] = 0x7A;
+        cpu.regs[Reg::B] = 0x12;
+        cpu.regs[Reg::C] = 0x12;
+        cpu.run_op(Opcode::LDBCA);
+        assert!(cpu.mem[0x1212] == 0x7A);
+    }
+
+    #[test]
+    fn test_run_lddea() {
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::A] = 0xA0;
+        cpu.regs[Reg::D] = 0x11;
+        cpu.regs[Reg::E] = 0x28;
+        cpu.run_op(Opcode::LDDEA);
+        assert!(cpu.mem[0x1128] == 0xA0);
+    }
+
+    #[test]
+    fn test_run_ldnna() {
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::A] = 0xD7;
+        cpu.run_op(Opcode::LDNNA(0x3141));
+        assert!(cpu.mem[0x3141] == 0xD7);
+    }
+
+    #[test]
+    fn test_run_ldai() {
+        // TODO: Review the "Condition Bits Affected" from z80 user manual
+        let mut cpu = Z80::new();
+        cpu.i = 0xD7;
+        cpu.run_op(Opcode::LDAI);
+        assert!(cpu.regs[Reg::A] == 0xD7);
+    }
+
+    #[test]
+    fn test_run_ldar() {
+        // TODO: Review the "Condition Bits Affected" from z80 user manual
+        let mut cpu = Z80::new();
+        cpu.r = 0xD7;
+        cpu.run_op(Opcode::LDAR);
+        assert!(cpu.regs[Reg::A] == 0xD7);
+    }
+
+    #[test]
+    fn test_run_ldia() {
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::A] = 0xD7;
+        cpu.run_op(Opcode::LDIA);
+        assert!(cpu.i == 0xD7);
+    }
+
+    #[test]
+    fn test_run_ldra() {
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::A] = 0xD7;
+        cpu.run_op(Opcode::LDRA);
+        assert!(cpu.r == 0xD7);
     }
 }
