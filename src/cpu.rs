@@ -33,6 +33,13 @@ struct Z80 {
 }
 
 impl Z80 {
+    fn new() -> Z80 {
+        Z80 {
+            regs: [0; 16],
+            i: 0, r: 0, ix: 0, iy: 0, sp: 0, pc:0,
+            mem: [0;65536]
+        }
+    }
     fn run_op(&mut self, op: Opcode) {
         match op {
             Opcode::LDRR(reg1, reg2) => self.regs[reg1] = self.regs[reg2],
@@ -53,6 +60,26 @@ impl Z80 {
                 let idx = ((self.regs[Reg::H] as u16) << 8) + self.regs[Reg::L] as u16;
                 self.mem[idx as usize] = self.regs[reg1];
             },
+            Opcode::LDIXDR(displacement, reg1) => {
+                let idx = self.ix + displacement as u16;
+                self.mem[idx as usize] = self.regs[reg1];
+            },
+            Opcode::LDIYDR(displacement, reg1) => {
+                let idx = self.iy + displacement as u16;
+                self.mem[idx as usize] = self.regs[reg1];
+            },
+            Opcode::LDHLN(value) => {
+                let idx = ((self.regs[Reg::H] as u16) << 8) + self.regs[Reg::L] as u16;
+                self.mem[idx as usize] = value;
+            },
+            Opcode::LDIXDN(displacement, value) => {
+                let idx = self.ix + displacement as u16;
+                self.mem[idx as usize] = value;
+            },
+            Opcode::LDIYDN(displacement, value) => {
+                let idx = self.iy + displacement as u16;
+                self.mem[idx as usize] = value;
+            },
             _ => ()
         }
     }
@@ -66,11 +93,7 @@ mod test {
 
     #[test]
     fn test_run_ldrr() {
-        let mut cpu = Z80 {
-            regs: [0; 16],
-            i: 0, r: 0, ix: 0, iy: 0, sp: 0, pc:0,
-            mem: [0;65536]
-        };
+        let mut cpu = Z80::new();
         cpu.regs[Reg::H] = 0x8A;
         cpu.regs[Reg::E] = 0x10;
         cpu.run_op(Opcode::LDRR(Reg::H, Reg::E));
@@ -80,11 +103,7 @@ mod test {
 
     #[test]
     fn test_run_ldrn() {
-        let mut cpu = Z80 {
-            regs: [0; 16],
-            i: 0, r: 0, ix: 0, iy: 0, sp: 0, pc:0,
-            mem: [0;65536]
-        };
+        let mut cpu = Z80::new();
         cpu.regs[Reg::E] = 0x8A;
         cpu.run_op(Opcode::LDRN(Reg::E, 0x20));
         assert!(cpu.regs[Reg::E] == 0x20);
@@ -92,11 +111,7 @@ mod test {
 
     #[test]
     fn test_run_ldrhl() {
-        let mut cpu = Z80 {
-            regs: [0; 16],
-            i: 0, r: 0, ix: 0, iy: 0, sp: 0, pc:0,
-            mem: [0;65536]
-        };
+        let mut cpu = Z80::new();
         cpu.mem[0x75A1] = 0x58;
         cpu.regs[Reg::C] = 0;
         cpu.regs[Reg::H] = 0x75;
@@ -107,11 +122,7 @@ mod test {
 
     #[test]
     fn test_run_ldrixd() {
-        let mut cpu = Z80 {
-            regs: [0; 16],
-            i: 0, r: 0, ix: 0, iy: 0, sp: 0, pc:0,
-            mem: [0;65536]
-        };
+        let mut cpu = Z80::new();
         cpu.mem[0x25C8] = 0x39;
         cpu.ix = 0x25AF;
         cpu.regs[Reg::B] = 0;
@@ -121,11 +132,7 @@ mod test {
 
     #[test]
     fn test_run_ldriyd() {
-        let mut cpu = Z80 {
-            regs: [0; 16],
-            i: 0, r: 0, ix: 0, iy: 0, sp: 0, pc:0,
-            mem: [0;65536]
-        };
+        let mut cpu = Z80::new();
         cpu.mem[0x25C8] = 0x39;
         cpu.iy = 0x25AF;
         cpu.regs[Reg::B] = 0;
@@ -135,16 +142,54 @@ mod test {
 
     #[test]
     fn test_run_ldhlr() {
-        let mut cpu = Z80 {
-            regs: [0; 16],
-            i: 0, r: 0, ix: 0, iy: 0, sp: 0, pc:0,
-            mem: [0;65536]
-        };
-        cpu.mem[0x2146] = 0;
+        let mut cpu = Z80::new();
         cpu.regs[Reg::B] = 0x29;
         cpu.regs[Reg::H] = 0x21;
         cpu.regs[Reg::L] = 0x46;
         cpu.run_op(Opcode::LDHLR(Reg::B));
         assert!(cpu.mem[0x2146] == 0x29);
+    }
+
+    #[test]
+    fn test_run_ldixdr() {
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::C] = 0x1C;
+        cpu.ix = 0x3100;
+        cpu.run_op(Opcode::LDIXDR(0x6, Reg::C));
+        assert!(cpu.mem[0x3106] == 0x1C);
+    }
+
+    #[test]
+    fn test_run_ldiydr() {
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::C] = 0x48;
+        cpu.iy = 0x2A11;
+        cpu.run_op(Opcode::LDIYDR(0x4, Reg::C));
+        assert!(cpu.mem[0x2A15] == 0x48);
+    }
+
+    #[test]
+    fn test_run_ldhln() {
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::H] = 0x44;
+        cpu.regs[Reg::L] = 0x44;
+        cpu.run_op(Opcode::LDHLN(0x28));
+        assert!(cpu.mem[0x4444] == 0x28);
+    }
+
+    #[test]
+    fn test_run_ldixdn() {
+        let mut cpu = Z80::new();
+        cpu.ix = 0xA940;
+        cpu.run_op(Opcode::LDIXDN(0x10, 0x97));
+        assert!(cpu.mem[0xA950] == 0x97);
+    }
+
+    #[test]
+    fn test_run_ldiydn() {
+        let mut cpu = Z80::new();
+        cpu.iy = 0xA940;
+        cpu.run_op(Opcode::LDIYDN(0x10, 0x97));
+        assert!(cpu.mem[0xA950] == 0x97);
     }
 }
