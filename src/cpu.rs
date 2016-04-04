@@ -42,20 +42,50 @@ impl Z80 {
         }
     }
 
-    fn read_reg_pair(&self, reg1: Reg, reg2: Reg) -> u16 {
+    fn get_reg_pair(&self, reg1: Reg, reg2: Reg) -> u16 {
         ((self.regs[reg1] as u16) << 8) + self.regs[reg2] as u16
     }
 
-    fn read_big_reg(&self, reg: BigReg) -> u16 {
+    fn get_big_reg(&self, reg: BigReg) -> u16 {
         match reg {
-            BigReg::BC => self.read_reg_pair(Reg::B, Reg::C),
-            BigReg::DE => self.read_reg_pair(Reg::D, Reg::E),
-            BigReg::HL => self.read_reg_pair(Reg::H, Reg::L),
+            BigReg::BC => self.get_reg_pair(Reg::B, Reg::C),
+            BigReg::DE => self.get_reg_pair(Reg::D, Reg::E),
+            BigReg::HL => self.get_reg_pair(Reg::H, Reg::L),
             BigReg::SP => self.sp,
             BigReg::IX => self.ix,
             BigReg::IY => self.iy,
-            BigReg::AF => self.read_reg_pair(Reg::A, Reg::F),
+            BigReg::AF => self.get_reg_pair(Reg::A, Reg::F),
         }
+    }
+
+    fn set_reg_pair(&mut self, reg1: Reg, reg2: Reg, value: u16) {
+        self.regs[reg1] = (value & 0xFF00).wrapping_shr(8) as u8;
+        self.regs[reg2] = (value & 0x00FF) as u8;
+    }
+
+    fn set_big_reg(&mut self, reg: BigReg, value: u16) {
+        match reg {
+            BigReg::BC => self.set_reg_pair(Reg::B, Reg::C, value),
+            BigReg::DE => self.set_reg_pair(Reg::D, Reg::E, value),
+            BigReg::HL => self.set_reg_pair(Reg::H, Reg::L, value),
+            BigReg::SP => self.sp = value,
+            BigReg::IX => self.ix = value,
+            BigReg::IY => self.iy = value,
+            BigReg::AF => self.set_reg_pair(Reg::A, Reg::F, value),
+        };
+    }
+
+    fn get_mem_u16(&mut self, address: u16) -> u16 {
+        ((self.mem[address as usize] as u16) << 8) + self.mem[(address + 1) as usize] as u16
+    }
+
+    fn set_mem_u16(&mut self, address: u16, value: u16) {
+        self.mem[address as usize] = (value & 0xFF00).wrapping_shr(8) as u8;
+        self.mem[(address + 1) as usize] = (value & 0x00FF) as u8;
+    }
+
+    fn flip_u16(&self, value: u16) -> u16 {
+        (value & 0xFF00).wrapping_shr(8) + (value & 0x00FF).wrapping_shl(8)
     }
 
     fn run_op(&mut self, op: Opcode) {
@@ -63,7 +93,7 @@ impl Z80 {
             Opcode::LDRR(reg1, reg2) => self.regs[reg1] = self.regs[reg2],
             Opcode::LDRN(reg1, value) => self.regs[reg1] = value,
             Opcode::LDRHL(reg1) => {
-                let idx = self.read_reg_pair(Reg::H, Reg::L);
+                let idx = self.get_reg_pair(Reg::H, Reg::L);
                 self.regs[reg1] = self.mem[idx as usize];
             },
             Opcode::LDRIXD(reg1, displacement) => {
@@ -75,7 +105,7 @@ impl Z80 {
                 self.regs[reg1] = self.mem[idx as usize];
             },
             Opcode::LDHLR(reg1) => {
-                let idx = self.read_reg_pair(Reg::H, Reg::L);
+                let idx = self.get_reg_pair(Reg::H, Reg::L);
                 self.mem[idx as usize] = self.regs[reg1];
             },
             Opcode::LDIXDR(displacement, reg1) => {
@@ -87,7 +117,7 @@ impl Z80 {
                 self.mem[idx as usize] = self.regs[reg1];
             },
             Opcode::LDHLN(value) => {
-                let idx = self.read_reg_pair(Reg::H, Reg::L);
+                let idx = self.get_reg_pair(Reg::H, Reg::L);
                 self.mem[idx as usize] = value;
             },
             Opcode::LDIXDN(displacement, value) => {
@@ -99,20 +129,20 @@ impl Z80 {
                 self.mem[idx as usize] = value;
             },
             Opcode::LDABC => {
-                let idx = self.read_reg_pair(Reg::B, Reg::C);
+                let idx = self.get_reg_pair(Reg::B, Reg::C);
                 self.regs[Reg::A] = self.mem[idx as usize];
             },
             Opcode::LDADE => {
-                let idx = self.read_reg_pair(Reg::D, Reg::E);
+                let idx = self.get_reg_pair(Reg::D, Reg::E);
                 self.regs[Reg::A] = self.mem[idx as usize];
             },
             Opcode::LDANN(idx) => self.regs[Reg::A] = self.mem[idx as usize],
             Opcode::LDBCA => {
-                let idx = self.read_reg_pair(Reg::B, Reg::C);
+                let idx = self.get_reg_pair(Reg::B, Reg::C);
                 self.mem[idx as usize] = self.regs[Reg::A];
             },
             Opcode::LDDEA => {
-                let idx = self.read_reg_pair(Reg::D, Reg::E);
+                let idx = self.get_reg_pair(Reg::D, Reg::E);
                 self.mem[idx as usize] = self.regs[Reg::A];
             },
             Opcode::LDNNA(idx) => self.mem[idx as usize] = self.regs[Reg::A],
@@ -120,6 +150,59 @@ impl Z80 {
             Opcode::LDAR => self.regs[Reg::A] = self.r,
             Opcode::LDIA => self.i = self.regs[Reg::A],
             Opcode::LDRA => self.r = self.regs[Reg::A],
+            Opcode::LDDDNN(big_reg, value) => self.set_big_reg(big_reg, value),
+            Opcode::LDIXNN(value) => self.ix = value,
+            Opcode::LDIYNN(value) => self.iy = value,
+            Opcode::LDHLNN(address) => {
+                let mut value = self.get_mem_u16(address);
+                value = self.flip_u16(value);
+                self.set_reg_pair(Reg::H, Reg::L, value);
+            },
+            Opcode::LDDDNN2(big_reg, address) => {
+                let mut value = self.get_mem_u16(address);
+                value = self.flip_u16(value);
+                self.set_big_reg(big_reg, value);
+            },
+            Opcode::LDIXNN2(address) => {
+                let mut value = self.get_mem_u16(address);
+                value = self.flip_u16(value);
+                self.ix = value;
+            },
+            Opcode::LDIYNN2(address) => {
+                let mut value = self.get_mem_u16(address);
+                value = self.flip_u16(value);
+                self.iy = value;
+            },
+            Opcode::LDNNHL(address) => {
+                let mut value = self.get_reg_pair(Reg::H, Reg::L);
+                value = self.flip_u16(value);
+                self.set_mem_u16(address, value);
+            },
+            Opcode::LDNNDD(address, big_reg) => {
+                let mut value = self.get_big_reg(big_reg);
+                value = self.flip_u16(value);
+                self.set_mem_u16(address, value);
+            },
+            Opcode::LDNNIX(address) => {
+                let mut value = self.ix;
+                value = self.flip_u16(value);
+                self.set_mem_u16(address, value);
+            },
+            Opcode::LDNNIY(address) => {
+                let mut value = self.iy;
+                value = self.flip_u16(value);
+                self.set_mem_u16(address, value);
+            },
+            Opcode::LDSPHL => self.sp = self.get_reg_pair(Reg::H, Reg::L),
+            Opcode::LDSPIX => self.sp = self.ix,
+            Opcode::LDSPIY => self.sp = self.iy,
+            Opcode::PUSHQQ(big_reg) => {
+                let mut value = self.get_big_reg(big_reg);
+                value = self.flip_u16(value);
+                self.sp -= 2;
+                let address = self.sp;
+                self.set_mem_u16(address, value);
+            },
             _ => ()
         }
     }
@@ -130,6 +213,7 @@ mod test {
     use super::Z80;
     use ops::Opcode;
     use ops::Reg;
+    use ops::BigReg;
 
     #[test]
     fn test_run_ldrr() {
@@ -321,5 +405,142 @@ mod test {
         cpu.regs[Reg::A] = 0xD7;
         cpu.run_op(Opcode::LDRA);
         assert!(cpu.r == 0xD7);
+    }
+
+    #[test]
+    fn test_run_ldddnn() {
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::H] = 0x99;
+        cpu.regs[Reg::L] = 0x99;
+        cpu.run_op(Opcode::LDDDNN(BigReg::HL, 0x5000));
+        assert!(cpu.regs[Reg::H] == 0x50);
+        assert!(cpu.regs[Reg::L] == 0x00);
+    }
+
+    #[test]
+    fn test_run_ldixnn() {
+        let mut cpu = Z80::new();
+        cpu.run_op(Opcode::LDIXNN(0x45A2));
+        assert!(cpu.ix == 0x45A2);
+    }
+
+    #[test]
+    fn test_run_ldiynn() {
+        let mut cpu = Z80::new();
+        cpu.run_op(Opcode::LDIYNN(0x45A2));
+        assert!(cpu.iy == 0x45A2);
+    }
+
+    #[test]
+    fn test_run_ldhlnn() {
+        let mut cpu = Z80::new();
+        cpu.mem[0x4545] = 0x37;
+        cpu.mem[0x4546] = 0xA1;
+        cpu.run_op(Opcode::LDHLNN(0x4545));
+        assert!(cpu.regs[Reg::H] == 0xA1);
+        assert!(cpu.regs[Reg::L] == 0x37);
+    }
+
+    #[test]
+    fn test_run_ldddnn2() {
+        let mut cpu = Z80::new();
+        cpu.mem[0x2130] = 0x65;
+        cpu.mem[0x2131] = 0x78;
+        cpu.run_op(Opcode::LDDDNN2(BigReg::HL, 0x2130));
+        assert!(cpu.regs[Reg::H] == 0x78);
+        assert!(cpu.regs[Reg::L] == 0x65);
+    }
+
+    #[test]
+    fn test_run_ldixnn2() {
+        let mut cpu = Z80::new();
+        cpu.mem[0x6666] = 0x92;
+        cpu.mem[0x6667] = 0xDA;
+        cpu.run_op(Opcode::LDIXNN2(0x6666));
+        assert!(cpu.ix == 0xDA92);
+    }
+
+    #[test]
+    fn test_run_ldiynn2() {
+        let mut cpu = Z80::new();
+        cpu.mem[0x6666] = 0x92;
+        cpu.mem[0x6667] = 0xDA;
+        cpu.run_op(Opcode::LDIYNN2(0x6666));
+        assert!(cpu.iy == 0xDA92);
+    }
+
+    #[test]
+    fn test_run_ldnnhl() {
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::H] = 0x48;
+        cpu.regs[Reg::L] = 0x3A;
+        cpu.run_op(Opcode::LDNNHL(0xB229));
+        assert!(cpu.mem[0xB229] == 0x3A);
+        assert!(cpu.mem[0xB22A] == 0x48);
+    }
+
+    #[test]
+    fn test_run_ldnndd() {
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::H] = 0x48;
+        cpu.regs[Reg::L] = 0x3A;
+        cpu.run_op(Opcode::LDNNDD(0xB229, BigReg::HL));
+        assert!(cpu.mem[0xB229] == 0x3A);
+        assert!(cpu.mem[0xB22A] == 0x48);
+    }
+
+    #[test]
+    fn test_run_ldnnix() {
+        let mut cpu = Z80::new();
+        cpu.ix = 0x5A30;
+        cpu.run_op(Opcode::LDNNIX(0x4392));
+        assert!(cpu.mem[0x4392] == 0x30);
+        assert!(cpu.mem[0x4393] == 0x5A);
+    }
+
+    #[test]
+    fn test_run_ldnniy() {
+        let mut cpu = Z80::new();
+        cpu.iy = 0x5A30;
+        cpu.run_op(Opcode::LDNNIY(0x4392));
+        assert!(cpu.mem[0x4392] == 0x30);
+        assert!(cpu.mem[0x4393] == 0x5A);
+    }
+
+    #[test]
+    fn test_run_ldsphl() {
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::H] = 0x44;
+        cpu.regs[Reg::L] = 0x23;
+        cpu.run_op(Opcode::LDSPHL);
+        assert!(cpu.sp == 0x4423);
+    }
+
+    #[test]
+    fn test_run_ldspix() {
+        let mut cpu = Z80::new();
+        cpu.ix = 0x4423;
+        cpu.run_op(Opcode::LDSPIX);
+        assert!(cpu.sp == 0x4423);
+    }
+
+    #[test]
+    fn test_run_ldspiy() {
+        let mut cpu = Z80::new();
+        cpu.iy = 0x4423;
+        cpu.run_op(Opcode::LDSPIY);
+        assert!(cpu.sp == 0x4423);
+    }
+
+    #[test]
+    fn test_run_pushqq() {
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::A] = 0x22;
+        cpu.regs[Reg::F] = 0x33;
+        cpu.sp = 0x1007;
+        cpu.run_op(Opcode::PUSHQQ(BigReg::AF));
+        assert!(cpu.mem[0x1006] == 0x22);
+        assert!(cpu.mem[0x1005] == 0x33);
+        assert!(cpu.sp == 0x1005);
     }
 }
