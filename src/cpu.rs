@@ -238,6 +238,80 @@ impl Z80 {
                 self.sp += 2;
                 self.iy = value;
             },
+            Opcode::EXDEHL => {
+                let d = self.regs[Reg::D];
+                self.regs[Reg::D] = self.regs[Reg::H];
+                self.regs[Reg::H] = d;
+                let e = self.regs[Reg::E];
+                self.regs[Reg::E] = self.regs[Reg::L];
+                self.regs[Reg::L] = e;
+            },
+            Opcode::EXAFAF2 => {
+                let a = self.regs[Reg::A];
+                self.regs[Reg::A] = self.regs[Reg::A2];
+                self.regs[Reg::A2] = a;
+                let f = self.regs[Reg::F];
+                self.regs[Reg::F] = self.regs[Reg::F2];
+                self.regs[Reg::F2] = f;
+            },
+            Opcode::EXX => {
+                let b = self.regs[Reg::B];
+                self.regs[Reg::B] = self.regs[Reg::B2];
+                self.regs[Reg::B2] = b;
+                let c = self.regs[Reg::C];
+                self.regs[Reg::C] = self.regs[Reg::C2];
+                self.regs[Reg::C2] = c;
+
+                let d = self.regs[Reg::D];
+                self.regs[Reg::D] = self.regs[Reg::D2];
+                self.regs[Reg::D2] = d;
+                let e = self.regs[Reg::E];
+                self.regs[Reg::E] = self.regs[Reg::E2];
+                self.regs[Reg::E2] = e;
+
+                let h = self.regs[Reg::H];
+                self.regs[Reg::H] = self.regs[Reg::H2];
+                self.regs[Reg::H2] = h;
+                let l = self.regs[Reg::L];
+                self.regs[Reg::L] = self.regs[Reg::L2];
+                self.regs[Reg::L2] = l;
+            },
+            Opcode::EXSPHL => {
+                let address = self.sp;
+
+                let mut reg_value = self.get_big_reg(BigReg::HL);
+                reg_value = self.flip_u16(reg_value);
+
+                let mut mem_value = self.get_mem_u16(address);
+                mem_value = self.flip_u16(mem_value);
+
+                self.set_mem_u16(address, reg_value);
+                self.set_big_reg(BigReg::HL, mem_value);
+            },
+            Opcode::EXSPIX => {
+                let address = self.sp;
+
+                let mut reg_value = self.ix;
+                reg_value = self.flip_u16(reg_value);
+
+                let mut mem_value = self.get_mem_u16(address);
+                mem_value = self.flip_u16(mem_value);
+
+                self.set_mem_u16(address, reg_value);
+                self.ix = mem_value;
+            },
+            Opcode::EXSPIY => {
+                let address = self.sp;
+
+                let mut reg_value = self.iy;
+                reg_value = self.flip_u16(reg_value);
+
+                let mut mem_value = self.get_mem_u16(address);
+                mem_value = self.flip_u16(mem_value);
+
+                self.set_mem_u16(address, reg_value);
+                self.iy = mem_value;
+            },
             _ => ()
         }
     }
@@ -633,5 +707,104 @@ mod test {
         cpu.run_op(Opcode::POPIY);
         assert!(cpu.iy == 0x2233);
         assert!(cpu.sp == 0x1007);
+    }
+
+    #[test]
+    fn test_run_exdehl() {
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::D] = 0x28;
+        cpu.regs[Reg::E] = 0x22;
+        cpu.regs[Reg::H] = 0x49;
+        cpu.regs[Reg::L] = 0x9A;
+        cpu.run_op(Opcode::EXDEHL);
+        assert!(cpu.regs[Reg::D] == 0x49);
+        assert!(cpu.regs[Reg::E] == 0x9A);
+        assert!(cpu.regs[Reg::H] == 0x28);
+        assert!(cpu.regs[Reg::L] == 0x22);
+    }
+
+    #[test]
+    fn test_run_exafaf2() {
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::A] = 0x99;
+        cpu.regs[Reg::F] = 0x00;
+        cpu.regs[Reg::A2] = 0x59;
+        cpu.regs[Reg::F2] = 0x44;
+        cpu.run_op(Opcode::EXAFAF2);
+        assert!(cpu.regs[Reg::A] == 0x59);
+        assert!(cpu.regs[Reg::F] == 0x44);
+        assert!(cpu.regs[Reg::A2] == 0x99);
+        assert!(cpu.regs[Reg::F2] == 0x00);
+    }
+
+    #[test]
+    fn test_run_exx() {
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::B] = 0x44;
+        cpu.regs[Reg::C] = 0x5A;
+        cpu.regs[Reg::D] = 0x3D;
+        cpu.regs[Reg::E] = 0xA2;
+        cpu.regs[Reg::H] = 0x88;
+        cpu.regs[Reg::L] = 0x59;
+        cpu.regs[Reg::B2] = 0x09;
+        cpu.regs[Reg::C2] = 0x88;
+        cpu.regs[Reg::D2] = 0x93;
+        cpu.regs[Reg::E2] = 0x00;
+        cpu.regs[Reg::H2] = 0x00;
+        cpu.regs[Reg::L2] = 0xE7;
+        cpu.run_op(Opcode::EXX);
+        assert!(cpu.regs[Reg::B] == 0x09);
+        assert!(cpu.regs[Reg::C] == 0x88);
+        assert!(cpu.regs[Reg::D] == 0x93);
+        assert!(cpu.regs[Reg::E] == 0x00);
+        assert!(cpu.regs[Reg::H] == 0x00);
+        assert!(cpu.regs[Reg::L] == 0xE7);
+        assert!(cpu.regs[Reg::B2] == 0x44);
+        assert!(cpu.regs[Reg::C2] == 0x5A);
+        assert!(cpu.regs[Reg::D2] == 0x3D);
+        assert!(cpu.regs[Reg::E2] == 0xA2);
+        assert!(cpu.regs[Reg::H2] == 0x88);
+        assert!(cpu.regs[Reg::L2] == 0x59);
+    }
+
+    #[test]
+    fn test_run_exsphl() {
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::H] = 0x70;
+        cpu.regs[Reg::L] = 0x12;
+        cpu.sp = 0x8856;
+        cpu.mem[0x8856] = 0x11;
+        cpu.mem[0x8857] = 0x22;
+        cpu.run_op(Opcode::EXSPHL);
+        assert!(cpu.regs[Reg::H] == 0x22);
+        assert!(cpu.regs[Reg::L] == 0x11);
+        assert!(cpu.mem[0x8856] == 0x12);
+        assert!(cpu.mem[0x8857] == 0x70);
+    }
+
+    #[test]
+    fn test_run_exspix() {
+        let mut cpu = Z80::new();
+        cpu.ix  = 0x3988;
+        cpu.sp = 0x0100;
+        cpu.mem[0x0100] = 0x90;
+        cpu.mem[0x0101] = 0x48;
+        cpu.run_op(Opcode::EXSPIX);
+        assert!(cpu.ix == 0x4890);
+        assert!(cpu.mem[0x0100] == 0x88);
+        assert!(cpu.mem[0x0101] == 0x39);
+    }
+
+    #[test]
+    fn test_run_exspiy() {
+        let mut cpu = Z80::new();
+        cpu.iy  = 0x3988;
+        cpu.sp = 0x0100;
+        cpu.mem[0x0100] = 0x90;
+        cpu.mem[0x0101] = 0x48;
+        cpu.run_op(Opcode::EXSPIY);
+        assert!(cpu.iy == 0x4890);
+        assert!(cpu.mem[0x0100] == 0x88);
+        assert!(cpu.mem[0x0101] == 0x39);
     }
 }
