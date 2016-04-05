@@ -342,8 +342,8 @@ mod test {
         cpu.regs[Reg::H] = 0x8A;
         cpu.regs[Reg::E] = 0x10;
         cpu.run_op(Opcode::LDRR(Reg::H, Reg::E));
-        assert!(cpu.regs[Reg::H] == 0x10);
-        assert!(cpu.regs[Reg::E] == 0x10);
+        assert_eq!(cpu.regs[Reg::H], 0x10);
+        assert_eq!(cpu.regs[Reg::E], 0x10);
     }
 
     #[test]
@@ -351,7 +351,7 @@ mod test {
         let mut cpu = Z80::new();
         cpu.regs[Reg::E] = 0x8A;
         cpu.run_op(Opcode::LDRN(Reg::E, 0x20));
-        assert!(cpu.regs[Reg::E] == 0x20);
+        assert_eq!(cpu.regs[Reg::E], 0x20);
     }
 
     #[test]
@@ -362,7 +362,7 @@ mod test {
         cpu.regs[Reg::H] = 0x75;
         cpu.regs[Reg::L] = 0xA1;
         cpu.run_op(Opcode::LDRHL(Reg::C));
-        assert!(cpu.regs[Reg::C] == 0x58);
+        assert_eq!(cpu.regs[Reg::C], 0x58);
     }
 
     #[test]
@@ -372,7 +372,7 @@ mod test {
         cpu.ix = 0x25AF;
         cpu.regs[Reg::B] = 0;
         cpu.run_op(Opcode::LDRIXD(Reg::B, 0x19));
-        assert!(cpu.regs[Reg::B] == 0x39);
+        assert_eq!(cpu.regs[Reg::B], 0x39);
     }
 
     #[test]
@@ -382,7 +382,7 @@ mod test {
         cpu.iy = 0x25AF;
         cpu.regs[Reg::B] = 0;
         cpu.run_op(Opcode::LDRIYD(Reg::B, 0x19));
-        assert!(cpu.regs[Reg::B] == 0x39);
+        assert_eq!(cpu.regs[Reg::B], 0x39);
     }
 
     #[test]
@@ -392,7 +392,7 @@ mod test {
         cpu.regs[Reg::H] = 0x21;
         cpu.regs[Reg::L] = 0x46;
         cpu.run_op(Opcode::LDHLR(Reg::B));
-        assert!(cpu.mem[0x2146] == 0x29);
+        assert_eq!(cpu.mem[0x2146], 0x29);
     }
 
     #[test]
@@ -401,7 +401,7 @@ mod test {
         cpu.regs[Reg::C] = 0x1C;
         cpu.ix = 0x3100;
         cpu.run_op(Opcode::LDIXDR(0x6, Reg::C));
-        assert!(cpu.mem[0x3106] == 0x1C);
+        assert_eq!(cpu.mem[0x3106], 0x1C);
     }
 
     #[test]
@@ -410,7 +410,7 @@ mod test {
         cpu.regs[Reg::C] = 0x48;
         cpu.iy = 0x2A11;
         cpu.run_op(Opcode::LDIYDR(0x4, Reg::C));
-        assert!(cpu.mem[0x2A15] == 0x48);
+        assert_eq!(cpu.mem[0x2A15], 0x48);
     }
 
     #[test]
@@ -419,7 +419,7 @@ mod test {
         cpu.regs[Reg::H] = 0x44;
         cpu.regs[Reg::L] = 0x44;
         cpu.run_op(Opcode::LDHLN(0x28));
-        assert!(cpu.mem[0x4444] == 0x28);
+        assert_eq!(cpu.mem[0x4444], 0x28);
     }
 
     #[test]
@@ -427,7 +427,7 @@ mod test {
         let mut cpu = Z80::new();
         cpu.ix = 0xA940;
         cpu.run_op(Opcode::LDIXDN(0x10, 0x97));
-        assert!(cpu.mem[0xA950] == 0x97);
+        assert_eq!(cpu.mem[0xA950], 0x97);
     }
 
     #[test]
@@ -435,7 +435,7 @@ mod test {
         let mut cpu = Z80::new();
         cpu.iy = 0xA940;
         cpu.run_op(Opcode::LDIYDN(0x10, 0x97));
-        assert!(cpu.mem[0xA950] == 0x97);
+        assert_eq!(cpu.mem[0xA950], 0x97);
     }
 
     #[test]
@@ -445,7 +445,7 @@ mod test {
         cpu.regs[Reg::B] = 0x47;
         cpu.regs[Reg::C] = 0x47;
         cpu.run_op(Opcode::LDABC);
-        assert!(cpu.regs[Reg::A] == 0x12);
+        assert_eq!(cpu.regs[Reg::A], 0x12);
     }
 
     #[test]
@@ -455,7 +455,7 @@ mod test {
         cpu.regs[Reg::D] = 0x30;
         cpu.regs[Reg::E] = 0xA2;
         cpu.run_op(Opcode::LDADE);
-        assert!(cpu.regs[Reg::A] == 0x22);
+        assert_eq!(cpu.regs[Reg::A], 0x22);
     }
 
     #[test]
@@ -463,7 +463,7 @@ mod test {
         let mut cpu = Z80::new();
         cpu.mem[0x8832] = 0x4;
         cpu.run_op(Opcode::LDANN(0x8832));
-        assert!(cpu.regs[Reg::A] == 0x4);
+        assert_eq!(cpu.regs[Reg::A], 0x4);
     }
 
     #[test]
@@ -473,7 +473,7 @@ mod test {
         cpu.regs[Reg::B] = 0x12;
         cpu.regs[Reg::C] = 0x12;
         cpu.run_op(Opcode::LDBCA);
-        assert!(cpu.mem[0x1212] == 0x7A);
+        assert_eq!(cpu.mem[0x1212], 0x7A);
     }
 
     #[test]
@@ -483,7 +483,7 @@ mod test {
         cpu.regs[Reg::D] = 0x11;
         cpu.regs[Reg::E] = 0x28;
         cpu.run_op(Opcode::LDDEA);
-        assert!(cpu.mem[0x1128] == 0xA0);
+        assert_eq!(cpu.mem[0x1128], 0xA0);
     }
 
     #[test]
@@ -491,7 +491,7 @@ mod test {
         let mut cpu = Z80::new();
         cpu.regs[Reg::A] = 0xD7;
         cpu.run_op(Opcode::LDNNA(0x3141));
-        assert!(cpu.mem[0x3141] == 0xD7);
+        assert_eq!(cpu.mem[0x3141], 0xD7);
     }
 
     #[test]
@@ -500,7 +500,7 @@ mod test {
         let mut cpu = Z80::new();
         cpu.i = 0xD7;
         cpu.run_op(Opcode::LDAI);
-        assert!(cpu.regs[Reg::A] == 0xD7);
+        assert_eq!(cpu.regs[Reg::A], 0xD7);
     }
 
     #[test]
@@ -509,7 +509,7 @@ mod test {
         let mut cpu = Z80::new();
         cpu.r = 0xD7;
         cpu.run_op(Opcode::LDAR);
-        assert!(cpu.regs[Reg::A] == 0xD7);
+        assert_eq!(cpu.regs[Reg::A], 0xD7);
     }
 
     #[test]
@@ -517,7 +517,7 @@ mod test {
         let mut cpu = Z80::new();
         cpu.regs[Reg::A] = 0xD7;
         cpu.run_op(Opcode::LDIA);
-        assert!(cpu.i == 0xD7);
+        assert_eq!(cpu.i, 0xD7);
     }
 
     #[test]
@@ -525,7 +525,7 @@ mod test {
         let mut cpu = Z80::new();
         cpu.regs[Reg::A] = 0xD7;
         cpu.run_op(Opcode::LDRA);
-        assert!(cpu.r == 0xD7);
+        assert_eq!(cpu.r, 0xD7);
     }
 
     #[test]
@@ -534,22 +534,22 @@ mod test {
         cpu.regs[Reg::H] = 0x99;
         cpu.regs[Reg::L] = 0x99;
         cpu.run_op(Opcode::LDDDNN(BigReg::HL, 0x5000));
-        assert!(cpu.regs[Reg::H] == 0x50);
-        assert!(cpu.regs[Reg::L] == 0x00);
+        assert_eq!(cpu.regs[Reg::H], 0x50);
+        assert_eq!(cpu.regs[Reg::L], 0x00);
     }
 
     #[test]
     fn test_run_ldixnn() {
         let mut cpu = Z80::new();
         cpu.run_op(Opcode::LDIXNN(0x45A2));
-        assert!(cpu.ix == 0x45A2);
+        assert_eq!(cpu.ix, 0x45A2);
     }
 
     #[test]
     fn test_run_ldiynn() {
         let mut cpu = Z80::new();
         cpu.run_op(Opcode::LDIYNN(0x45A2));
-        assert!(cpu.iy == 0x45A2);
+        assert_eq!(cpu.iy, 0x45A2);
     }
 
     #[test]
@@ -558,8 +558,8 @@ mod test {
         cpu.mem[0x4545] = 0x37;
         cpu.mem[0x4546] = 0xA1;
         cpu.run_op(Opcode::LDHLNN(0x4545));
-        assert!(cpu.regs[Reg::H] == 0xA1);
-        assert!(cpu.regs[Reg::L] == 0x37);
+        assert_eq!(cpu.regs[Reg::H], 0xA1);
+        assert_eq!(cpu.regs[Reg::L], 0x37);
     }
 
     #[test]
@@ -568,8 +568,8 @@ mod test {
         cpu.mem[0x2130] = 0x65;
         cpu.mem[0x2131] = 0x78;
         cpu.run_op(Opcode::LDDDNN2(BigReg::HL, 0x2130));
-        assert!(cpu.regs[Reg::H] == 0x78);
-        assert!(cpu.regs[Reg::L] == 0x65);
+        assert_eq!(cpu.regs[Reg::H], 0x78);
+        assert_eq!(cpu.regs[Reg::L], 0x65);
     }
 
     #[test]
@@ -578,7 +578,7 @@ mod test {
         cpu.mem[0x6666] = 0x92;
         cpu.mem[0x6667] = 0xDA;
         cpu.run_op(Opcode::LDIXNN2(0x6666));
-        assert!(cpu.ix == 0xDA92);
+        assert_eq!(cpu.ix, 0xDA92);
     }
 
     #[test]
@@ -587,7 +587,7 @@ mod test {
         cpu.mem[0x6666] = 0x92;
         cpu.mem[0x6667] = 0xDA;
         cpu.run_op(Opcode::LDIYNN2(0x6666));
-        assert!(cpu.iy == 0xDA92);
+        assert_eq!(cpu.iy, 0xDA92);
     }
 
     #[test]
@@ -596,8 +596,8 @@ mod test {
         cpu.regs[Reg::H] = 0x48;
         cpu.regs[Reg::L] = 0x3A;
         cpu.run_op(Opcode::LDNNHL(0xB229));
-        assert!(cpu.mem[0xB229] == 0x3A);
-        assert!(cpu.mem[0xB22A] == 0x48);
+        assert_eq!(cpu.mem[0xB229], 0x3A);
+        assert_eq!(cpu.mem[0xB22A], 0x48);
     }
 
     #[test]
@@ -606,8 +606,8 @@ mod test {
         cpu.regs[Reg::H] = 0x48;
         cpu.regs[Reg::L] = 0x3A;
         cpu.run_op(Opcode::LDNNDD(0xB229, BigReg::HL));
-        assert!(cpu.mem[0xB229] == 0x3A);
-        assert!(cpu.mem[0xB22A] == 0x48);
+        assert_eq!(cpu.mem[0xB229], 0x3A);
+        assert_eq!(cpu.mem[0xB22A], 0x48);
     }
 
     #[test]
@@ -615,8 +615,8 @@ mod test {
         let mut cpu = Z80::new();
         cpu.ix = 0x5A30;
         cpu.run_op(Opcode::LDNNIX(0x4392));
-        assert!(cpu.mem[0x4392] == 0x30);
-        assert!(cpu.mem[0x4393] == 0x5A);
+        assert_eq!(cpu.mem[0x4392], 0x30);
+        assert_eq!(cpu.mem[0x4393], 0x5A);
     }
 
     #[test]
@@ -624,8 +624,8 @@ mod test {
         let mut cpu = Z80::new();
         cpu.iy = 0x5A30;
         cpu.run_op(Opcode::LDNNIY(0x4392));
-        assert!(cpu.mem[0x4392] == 0x30);
-        assert!(cpu.mem[0x4393] == 0x5A);
+        assert_eq!(cpu.mem[0x4392], 0x30);
+        assert_eq!(cpu.mem[0x4393], 0x5A);
     }
 
     #[test]
@@ -634,7 +634,7 @@ mod test {
         cpu.regs[Reg::H] = 0x44;
         cpu.regs[Reg::L] = 0x23;
         cpu.run_op(Opcode::LDSPHL);
-        assert!(cpu.sp == 0x4423);
+        assert_eq!(cpu.sp, 0x4423);
     }
 
     #[test]
@@ -642,7 +642,7 @@ mod test {
         let mut cpu = Z80::new();
         cpu.ix = 0x4423;
         cpu.run_op(Opcode::LDSPIX);
-        assert!(cpu.sp == 0x4423);
+        assert_eq!(cpu.sp, 0x4423);
     }
 
     #[test]
@@ -650,7 +650,7 @@ mod test {
         let mut cpu = Z80::new();
         cpu.iy = 0x4423;
         cpu.run_op(Opcode::LDSPIY);
-        assert!(cpu.sp == 0x4423);
+        assert_eq!(cpu.sp, 0x4423);
     }
 
     #[test]
@@ -660,9 +660,9 @@ mod test {
         cpu.regs[Reg::F] = 0x33;
         cpu.sp = 0x1007;
         cpu.run_op(Opcode::PUSHQQ(BigReg::AF));
-        assert!(cpu.mem[0x1006] == 0x22);
-        assert!(cpu.mem[0x1005] == 0x33);
-        assert!(cpu.sp == 0x1005);
+        assert_eq!(cpu.mem[0x1006], 0x22);
+        assert_eq!(cpu.mem[0x1005], 0x33);
+        assert_eq!(cpu.sp, 0x1005);
     }
 
     #[test]
@@ -671,9 +671,9 @@ mod test {
         cpu.ix = 0x2233;
         cpu.sp = 0x1007;
         cpu.run_op(Opcode::PUSHIX);
-        assert!(cpu.mem[0x1006] == 0x22);
-        assert!(cpu.mem[0x1005] == 0x33);
-        assert!(cpu.sp == 0x1005);
+        assert_eq!(cpu.mem[0x1006], 0x22);
+        assert_eq!(cpu.mem[0x1005], 0x33);
+        assert_eq!(cpu.sp, 0x1005);
     }
 
     #[test]
@@ -682,9 +682,9 @@ mod test {
         cpu.iy = 0x2233;
         cpu.sp = 0x1007;
         cpu.run_op(Opcode::PUSHIY);
-        assert!(cpu.mem[0x1006] == 0x22);
-        assert!(cpu.mem[0x1005] == 0x33);
-        assert!(cpu.sp == 0x1005);
+        assert_eq!(cpu.mem[0x1006], 0x22);
+        assert_eq!(cpu.mem[0x1005], 0x33);
+        assert_eq!(cpu.sp, 0x1005);
     }
 
     #[test]
@@ -694,9 +694,9 @@ mod test {
         cpu.mem[0x1005] = 0x33;
         cpu.sp = 0x1005;
         cpu.run_op(Opcode::POPQQ(BigReg::AF));
-        assert!(cpu.regs[Reg::A] == 0x22);
-        assert!(cpu.regs[Reg::F] == 0x33);
-        assert!(cpu.sp == 0x1007);
+        assert_eq!(cpu.regs[Reg::A], 0x22);
+        assert_eq!(cpu.regs[Reg::F], 0x33);
+        assert_eq!(cpu.sp, 0x1007);
     }
 
     #[test]
@@ -706,8 +706,8 @@ mod test {
         cpu.mem[0x1005] = 0x33;
         cpu.sp = 0x1005;
         cpu.run_op(Opcode::POPIX);
-        assert!(cpu.ix == 0x2233);
-        assert!(cpu.sp == 0x1007);
+        assert_eq!(cpu.ix, 0x2233);
+        assert_eq!(cpu.sp, 0x1007);
     }
 
     #[test]
@@ -717,8 +717,8 @@ mod test {
         cpu.mem[0x1005] = 0x33;
         cpu.sp = 0x1005;
         cpu.run_op(Opcode::POPIY);
-        assert!(cpu.iy == 0x2233);
-        assert!(cpu.sp == 0x1007);
+        assert_eq!(cpu.iy, 0x2233);
+        assert_eq!(cpu.sp, 0x1007);
     }
 
     #[test]
@@ -729,10 +729,10 @@ mod test {
         cpu.regs[Reg::H] = 0x49;
         cpu.regs[Reg::L] = 0x9A;
         cpu.run_op(Opcode::EXDEHL);
-        assert!(cpu.regs[Reg::D] == 0x49);
-        assert!(cpu.regs[Reg::E] == 0x9A);
-        assert!(cpu.regs[Reg::H] == 0x28);
-        assert!(cpu.regs[Reg::L] == 0x22);
+        assert_eq!(cpu.regs[Reg::D], 0x49);
+        assert_eq!(cpu.regs[Reg::E], 0x9A);
+        assert_eq!(cpu.regs[Reg::H], 0x28);
+        assert_eq!(cpu.regs[Reg::L], 0x22);
     }
 
     #[test]
@@ -743,10 +743,10 @@ mod test {
         cpu.regs[Reg::A2] = 0x59;
         cpu.regs[Reg::F2] = 0x44;
         cpu.run_op(Opcode::EXAFAF2);
-        assert!(cpu.regs[Reg::A] == 0x59);
-        assert!(cpu.regs[Reg::F] == 0x44);
-        assert!(cpu.regs[Reg::A2] == 0x99);
-        assert!(cpu.regs[Reg::F2] == 0x00);
+        assert_eq!(cpu.regs[Reg::A], 0x59);
+        assert_eq!(cpu.regs[Reg::F], 0x44);
+        assert_eq!(cpu.regs[Reg::A2], 0x99);
+        assert_eq!(cpu.regs[Reg::F2], 0x00);
     }
 
     #[test]
@@ -765,18 +765,18 @@ mod test {
         cpu.regs[Reg::H2] = 0x00;
         cpu.regs[Reg::L2] = 0xE7;
         cpu.run_op(Opcode::EXX);
-        assert!(cpu.regs[Reg::B] == 0x09);
-        assert!(cpu.regs[Reg::C] == 0x88);
-        assert!(cpu.regs[Reg::D] == 0x93);
-        assert!(cpu.regs[Reg::E] == 0x00);
-        assert!(cpu.regs[Reg::H] == 0x00);
-        assert!(cpu.regs[Reg::L] == 0xE7);
-        assert!(cpu.regs[Reg::B2] == 0x44);
-        assert!(cpu.regs[Reg::C2] == 0x5A);
-        assert!(cpu.regs[Reg::D2] == 0x3D);
-        assert!(cpu.regs[Reg::E2] == 0xA2);
-        assert!(cpu.regs[Reg::H2] == 0x88);
-        assert!(cpu.regs[Reg::L2] == 0x59);
+        assert_eq!(cpu.regs[Reg::B], 0x09);
+        assert_eq!(cpu.regs[Reg::C], 0x88);
+        assert_eq!(cpu.regs[Reg::D], 0x93);
+        assert_eq!(cpu.regs[Reg::E], 0x00);
+        assert_eq!(cpu.regs[Reg::H], 0x00);
+        assert_eq!(cpu.regs[Reg::L], 0xE7);
+        assert_eq!(cpu.regs[Reg::B2], 0x44);
+        assert_eq!(cpu.regs[Reg::C2], 0x5A);
+        assert_eq!(cpu.regs[Reg::D2], 0x3D);
+        assert_eq!(cpu.regs[Reg::E2], 0xA2);
+        assert_eq!(cpu.regs[Reg::H2], 0x88);
+        assert_eq!(cpu.regs[Reg::L2], 0x59);
     }
 
     #[test]
@@ -788,10 +788,10 @@ mod test {
         cpu.mem[0x8856] = 0x11;
         cpu.mem[0x8857] = 0x22;
         cpu.run_op(Opcode::EXSPHL);
-        assert!(cpu.regs[Reg::H] == 0x22);
-        assert!(cpu.regs[Reg::L] == 0x11);
-        assert!(cpu.mem[0x8856] == 0x12);
-        assert!(cpu.mem[0x8857] == 0x70);
+        assert_eq!(cpu.regs[Reg::H], 0x22);
+        assert_eq!(cpu.regs[Reg::L], 0x11);
+        assert_eq!(cpu.mem[0x8856], 0x12);
+        assert_eq!(cpu.mem[0x8857], 0x70);
     }
 
     #[test]
@@ -802,9 +802,9 @@ mod test {
         cpu.mem[0x0100] = 0x90;
         cpu.mem[0x0101] = 0x48;
         cpu.run_op(Opcode::EXSPIX);
-        assert!(cpu.ix == 0x4890);
-        assert!(cpu.mem[0x0100] == 0x88);
-        assert!(cpu.mem[0x0101] == 0x39);
+        assert_eq!(cpu.ix, 0x4890);
+        assert_eq!(cpu.mem[0x0100], 0x88);
+        assert_eq!(cpu.mem[0x0101], 0x39);
     }
 
     #[test]
@@ -815,8 +815,8 @@ mod test {
         cpu.mem[0x0100] = 0x90;
         cpu.mem[0x0101] = 0x48;
         cpu.run_op(Opcode::EXSPIY);
-        assert!(cpu.iy == 0x4890);
-        assert!(cpu.mem[0x0100] == 0x88);
-        assert!(cpu.mem[0x0101] == 0x39);
+        assert_eq!(cpu.iy, 0x4890);
+        assert_eq!(cpu.mem[0x0100], 0x88);
+        assert_eq!(cpu.mem[0x0101], 0x39);
     }
 }
