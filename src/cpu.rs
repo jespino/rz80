@@ -203,6 +203,41 @@ impl Z80 {
                 let address = self.sp;
                 self.set_mem_u16(address, value);
             },
+            Opcode::PUSHIX => {
+                let mut value = self.ix;
+                value = self.flip_u16(value);
+                self.sp -= 2;
+                let address = self.sp;
+                self.set_mem_u16(address, value);
+            },
+            Opcode::PUSHIY => {
+                let mut value = self.iy;
+                value = self.flip_u16(value);
+                self.sp -= 2;
+                let address = self.sp;
+                self.set_mem_u16(address, value);
+            },
+            Opcode::POPQQ(big_reg) => {
+                let address = self.sp;
+                let mut value = self.get_mem_u16(address);
+                value = self.flip_u16(value);
+                self.sp += 2;
+                self.set_big_reg(big_reg, value);
+            },
+            Opcode::POPIX => {
+                let address = self.sp;
+                let mut value = self.get_mem_u16(address);
+                value = self.flip_u16(value);
+                self.sp += 2;
+                self.ix = value;
+            },
+            Opcode::POPIY => {
+                let address = self.sp;
+                let mut value = self.get_mem_u16(address);
+                value = self.flip_u16(value);
+                self.sp += 2;
+                self.iy = value;
+            },
             _ => ()
         }
     }
@@ -542,5 +577,61 @@ mod test {
         assert!(cpu.mem[0x1006] == 0x22);
         assert!(cpu.mem[0x1005] == 0x33);
         assert!(cpu.sp == 0x1005);
+    }
+
+    #[test]
+    fn test_run_pushix() {
+        let mut cpu = Z80::new();
+        cpu.ix = 0x2233;
+        cpu.sp = 0x1007;
+        cpu.run_op(Opcode::PUSHIX);
+        assert!(cpu.mem[0x1006] == 0x22);
+        assert!(cpu.mem[0x1005] == 0x33);
+        assert!(cpu.sp == 0x1005);
+    }
+
+    #[test]
+    fn test_run_pushiy() {
+        let mut cpu = Z80::new();
+        cpu.iy = 0x2233;
+        cpu.sp = 0x1007;
+        cpu.run_op(Opcode::PUSHIY);
+        assert!(cpu.mem[0x1006] == 0x22);
+        assert!(cpu.mem[0x1005] == 0x33);
+        assert!(cpu.sp == 0x1005);
+    }
+
+    #[test]
+    fn test_run_popqq() {
+        let mut cpu = Z80::new();
+        cpu.mem[0x1006] = 0x22;
+        cpu.mem[0x1005] = 0x33;
+        cpu.sp = 0x1005;
+        cpu.run_op(Opcode::POPQQ(BigReg::AF));
+        assert!(cpu.regs[Reg::A] == 0x22);
+        assert!(cpu.regs[Reg::F] == 0x33);
+        assert!(cpu.sp == 0x1007);
+    }
+
+    #[test]
+    fn test_run_popix() {
+        let mut cpu = Z80::new();
+        cpu.mem[0x1006] = 0x22;
+        cpu.mem[0x1005] = 0x33;
+        cpu.sp = 0x1005;
+        cpu.run_op(Opcode::POPIX);
+        assert!(cpu.ix == 0x2233);
+        assert!(cpu.sp == 0x1007);
+    }
+
+    #[test]
+    fn test_run_popiy() {
+        let mut cpu = Z80::new();
+        cpu.mem[0x1006] = 0x22;
+        cpu.mem[0x1005] = 0x33;
+        cpu.sp = 0x1005;
+        cpu.run_op(Opcode::POPIY);
+        assert!(cpu.iy == 0x2233);
+        assert!(cpu.sp == 0x1007);
     }
 }
