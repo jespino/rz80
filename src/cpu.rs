@@ -324,6 +324,28 @@ impl Z80 {
                 self.set_mem_u16(address, reg_value);
                 self.iy = mem_value;
             },
+            Opcode::LDI => {
+                let address_hl = self.get_reg_pair(Reg::H, Reg::L);
+                let address_de = self.get_reg_pair(Reg::D, Reg::E);
+                self.mem[address_de as usize] = self.mem[address_hl as usize];
+                self.set_reg_pair(Reg::H, Reg::L, address_hl + 1);
+                self.set_reg_pair(Reg::D, Reg::E, address_de + 1);
+                let value_bc = self.get_reg_pair(Reg::B, Reg::C);
+                self.set_reg_pair(Reg::B, Reg::C, value_bc - 1);
+            }
+            Opcode::LDIR => {
+                let value_bc = self.get_reg_pair(Reg::B, Reg::C);
+                let address_hl = self.get_reg_pair(Reg::H, Reg::L);
+                let address_de = self.get_reg_pair(Reg::D, Reg::E);
+                let mut counter = 0;
+                while value_bc > counter {
+                    self.mem[(address_de + counter) as usize] = self.mem[(address_hl + counter) as usize];
+                    counter += 1;
+                }
+                self.set_reg_pair(Reg::H, Reg::L, address_hl + counter);
+                self.set_reg_pair(Reg::D, Reg::E, address_de + counter);
+                self.set_reg_pair(Reg::B, Reg::C, 0);
+            }
             _ => ()
         }
     }
@@ -818,5 +840,61 @@ mod test {
         assert_eq!(cpu.iy, 0x4890);
         assert_eq!(cpu.mem[0x0100], 0x88);
         assert_eq!(cpu.mem[0x0101], 0x39);
+    }
+
+    #[test]
+    fn test_run_ldi() {
+        // TODO: Review the "Condition Bits Affected" from z80 user manual
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::H] = 0x11;
+        cpu.regs[Reg::L] = 0x11;
+        cpu.mem[0x1111] = 0x88;
+        cpu.regs[Reg::D] = 0x22;
+        cpu.regs[Reg::E] = 0x22;
+        cpu.mem[0x2222] = 0x66;
+        cpu.regs[Reg::B] = 0x00;
+        cpu.regs[Reg::C] = 0x07;
+
+        cpu.run_op(Opcode::LDI);
+        assert_eq!(cpu.mem[0x1111], 0x88);
+        assert_eq!(cpu.mem[0x2222], 0x88);
+        assert_eq!(cpu.regs[Reg::H], 0x11);
+        assert_eq!(cpu.regs[Reg::L], 0x12);
+        assert_eq!(cpu.regs[Reg::D], 0x22);
+        assert_eq!(cpu.regs[Reg::E], 0x23);
+        assert_eq!(cpu.regs[Reg::B], 0x00);
+        assert_eq!(cpu.regs[Reg::C], 0x06);
+    }
+
+    #[test]
+    fn test_run_ldir() {
+        // TODO: Review the "Condition Bits Affected" from z80 user manual
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::H] = 0x11;
+        cpu.regs[Reg::L] = 0x11;
+        cpu.mem[0x1111] = 0x88;
+        cpu.mem[0x1112] = 0x36;
+        cpu.mem[0x1113] = 0x5A;
+        cpu.regs[Reg::D] = 0x22;
+        cpu.regs[Reg::E] = 0x22;
+        cpu.mem[0x2222] = 0x66;
+        cpu.mem[0x2223] = 0x59;
+        cpu.mem[0x2224] = 0xC5;
+        cpu.regs[Reg::B] = 0x00;
+        cpu.regs[Reg::C] = 0x03;
+
+        cpu.run_op(Opcode::LDIR);
+        assert_eq!(cpu.regs[Reg::H], 0x11);
+        assert_eq!(cpu.regs[Reg::L], 0x14);
+        assert_eq!(cpu.regs[Reg::D], 0x22);
+        assert_eq!(cpu.regs[Reg::E], 0x25);
+        assert_eq!(cpu.regs[Reg::B], 0x00);
+        assert_eq!(cpu.regs[Reg::C], 0x00);
+        assert_eq!(cpu.mem[0x1111], 0x88);
+        assert_eq!(cpu.mem[0x1112], 0x36);
+        assert_eq!(cpu.mem[0x1113], 0x5A);
+        assert_eq!(cpu.mem[0x2222], 0x88);
+        assert_eq!(cpu.mem[0x2223], 0x36);
+        assert_eq!(cpu.mem[0x2224], 0x5A);
     }
 }
