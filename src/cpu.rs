@@ -146,8 +146,14 @@ impl Z80 {
                 self.mem[idx as usize] = self.regs[Reg::A];
             },
             Opcode::LDNNA(idx) => self.mem[idx as usize] = self.regs[Reg::A],
-            Opcode::LDAI => self.regs[Reg::A] = self.i,
-            Opcode::LDAR => self.regs[Reg::A] = self.r,
+            Opcode::LDAI => {
+                // TODO: Set flags
+                self.regs[Reg::A] = self.i;
+            },
+            Opcode::LDAR => {
+                // TODO: Set flags
+                self.regs[Reg::A] = self.r;
+            },
             Opcode::LDIA => self.i = self.regs[Reg::A],
             Opcode::LDRA => self.r = self.regs[Reg::A],
             Opcode::LDDDNN(big_reg, value) => self.set_big_reg(big_reg, value),
@@ -320,6 +326,7 @@ impl Z80 {
                 self.set_reg_pair(Reg::D, Reg::E, address_de + 1);
                 let value_bc = self.get_reg_pair(Reg::B, Reg::C);
                 self.set_reg_pair(Reg::B, Reg::C, value_bc - 1);
+                // TODO: Set flags
             }
             Opcode::LDIR => {
                 let value_bc = self.get_reg_pair(Reg::B, Reg::C);
@@ -333,7 +340,86 @@ impl Z80 {
                 self.set_reg_pair(Reg::H, Reg::L, address_hl + counter);
                 self.set_reg_pair(Reg::D, Reg::E, address_de + counter);
                 self.set_reg_pair(Reg::B, Reg::C, 0);
-            }
+                // TODO: Set flags
+            },
+            Opcode::LDD => {
+                let address_hl = self.get_reg_pair(Reg::H, Reg::L);
+                let address_de = self.get_reg_pair(Reg::D, Reg::E);
+                self.mem[address_de as usize] = self.mem[address_hl as usize];
+                self.set_reg_pair(Reg::H, Reg::L, address_hl - 1);
+                self.set_reg_pair(Reg::D, Reg::E, address_de - 1);
+                let value_bc = self.get_reg_pair(Reg::B, Reg::C);
+                self.set_reg_pair(Reg::B, Reg::C, value_bc - 1);
+                // TODO: Set flags
+            },
+            Opcode::LDDR => {
+                let value_bc = self.get_reg_pair(Reg::B, Reg::C);
+                let address_hl = self.get_reg_pair(Reg::H, Reg::L);
+                let address_de = self.get_reg_pair(Reg::D, Reg::E);
+                let mut counter = 0;
+                while value_bc > counter {
+                    self.mem[(address_de - counter) as usize] = self.mem[(address_hl - counter) as usize];
+                    counter += 1;
+                }
+                self.set_reg_pair(Reg::H, Reg::L, address_hl - counter);
+                self.set_reg_pair(Reg::D, Reg::E, address_de - counter);
+                self.set_reg_pair(Reg::B, Reg::C, 0);
+                // TODO: Set flags
+            },
+            Opcode::CPI => {
+                let address_hl = self.get_reg_pair(Reg::H, Reg::L);
+                self.set_reg_pair(Reg::H, Reg::L, address_hl + 1);
+                let value_bc = self.get_reg_pair(Reg::B, Reg::C);
+                self.set_reg_pair(Reg::B, Reg::C, value_bc - 1);
+                // TODO: Set flags
+            },
+            Opcode::CPIR => {
+                let value_bc = self.get_reg_pair(Reg::B, Reg::C);
+                let address_hl = self.get_reg_pair(Reg::H, Reg::L);
+                let mut counter = 0;
+
+                // TODO: This behavior doesn't emulate the behavior of the CPU (Review the Z80 User
+                // manual description of the instruction)
+                loop {
+                    if self.mem[(address_hl + counter) as usize] == self.regs[Reg::A] {
+                        break;
+                    }
+                    if value_bc - counter == 0 { break; }
+                    counter += 1;
+                }
+                counter += 1;
+                self.set_reg_pair(Reg::H, Reg::L, address_hl + counter);
+                self.set_reg_pair(Reg::B, Reg::C, value_bc - counter);
+
+                // TODO: Set flags
+            },
+            Opcode::CPD => {
+                let address_hl = self.get_reg_pair(Reg::H, Reg::L);
+                self.set_reg_pair(Reg::H, Reg::L, address_hl - 1);
+                let value_bc = self.get_reg_pair(Reg::B, Reg::C);
+                self.set_reg_pair(Reg::B, Reg::C, value_bc - 1);
+                // TODO: Set flags
+            },
+            Opcode::CPDR => {
+                let value_bc = self.get_reg_pair(Reg::B, Reg::C);
+                let address_hl = self.get_reg_pair(Reg::H, Reg::L);
+                let mut counter = 0;
+
+                // TODO: This behavior doesn't emulate the behavior of the CPU (Review the Z80 User
+                // manual description of the instruction)
+                loop {
+                    if self.mem[(address_hl - counter) as usize] == self.regs[Reg::A] {
+                        break;
+                    }
+                    if value_bc - counter == 0 { break; }
+                    counter += 1;
+                }
+                counter += 1;
+                self.set_reg_pair(Reg::H, Reg::L, address_hl - counter);
+                self.set_reg_pair(Reg::B, Reg::C, value_bc - counter);
+
+                // TODO: Set flags
+            },
             _ => ()
         }
     }
@@ -884,5 +970,149 @@ mod test {
         assert_eq!(cpu.mem[0x2222], 0x88);
         assert_eq!(cpu.mem[0x2223], 0x36);
         assert_eq!(cpu.mem[0x2224], 0x5A);
+    }
+
+    #[test]
+    fn test_run_ldd() {
+        // TODO: Review the "Condition Bits Affected" from z80 user manual
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::H] = 0x11;
+        cpu.regs[Reg::L] = 0x11;
+        cpu.mem[0x1111] = 0x88;
+        cpu.regs[Reg::D] = 0x22;
+        cpu.regs[Reg::E] = 0x22;
+        cpu.mem[0x2222] = 0x66;
+        cpu.regs[Reg::B] = 0x00;
+        cpu.regs[Reg::C] = 0x07;
+
+        cpu.run_op(Opcode::LDD);
+        assert_eq!(cpu.mem[0x1111], 0x88);
+        assert_eq!(cpu.mem[0x2222], 0x88);
+        assert_eq!(cpu.regs[Reg::H], 0x11);
+        assert_eq!(cpu.regs[Reg::L], 0x10);
+        assert_eq!(cpu.regs[Reg::D], 0x22);
+        assert_eq!(cpu.regs[Reg::E], 0x21);
+        assert_eq!(cpu.regs[Reg::B], 0x00);
+        assert_eq!(cpu.regs[Reg::C], 0x06);
+    }
+
+    #[test]
+    fn test_run_lddr() {
+        // TODO: Review the "Condition Bits Affected" from z80 user manual
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::H] = 0x11;
+        cpu.regs[Reg::L] = 0x14;
+        cpu.mem[0x1112] = 0x88;
+        cpu.mem[0x1113] = 0x36;
+        cpu.mem[0x1114] = 0x5A;
+        cpu.regs[Reg::D] = 0x22;
+        cpu.regs[Reg::E] = 0x25;
+        cpu.mem[0x2223] = 0x66;
+        cpu.mem[0x2224] = 0x59;
+        cpu.mem[0x2225] = 0xC5;
+        cpu.regs[Reg::B] = 0x00;
+        cpu.regs[Reg::C] = 0x03;
+
+        cpu.run_op(Opcode::LDDR);
+        assert_eq!(cpu.regs[Reg::H], 0x11);
+        assert_eq!(cpu.regs[Reg::L], 0x11);
+        assert_eq!(cpu.regs[Reg::D], 0x22);
+        assert_eq!(cpu.regs[Reg::E], 0x22);
+        assert_eq!(cpu.regs[Reg::B], 0x00);
+        assert_eq!(cpu.regs[Reg::C], 0x00);
+        assert_eq!(cpu.mem[0x1112], 0x88);
+        assert_eq!(cpu.mem[0x1113], 0x36);
+        assert_eq!(cpu.mem[0x1114], 0x5A);
+        assert_eq!(cpu.mem[0x2223], 0x88);
+        assert_eq!(cpu.mem[0x2224], 0x36);
+        assert_eq!(cpu.mem[0x2225], 0x5A);
+    }
+
+    #[test]
+    fn test_run_cpi() {
+        // TODO: Review the "Condition Bits Affected" from z80 user manual
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::H] = 0x11;
+        cpu.regs[Reg::L] = 0x11;
+        cpu.mem[0x1111] = 0x3B;
+        cpu.regs[Reg::A] = 0x3B;
+        cpu.regs[Reg::B] = 0x00;
+        cpu.regs[Reg::C] = 0x01;
+
+        cpu.run_op(Opcode::CPI);
+        assert_eq!(cpu.mem[0x1111], 0x3B);
+        assert_eq!(cpu.regs[Reg::H], 0x11);
+        assert_eq!(cpu.regs[Reg::L], 0x12);
+        assert_eq!(cpu.regs[Reg::A], 0x3B);
+        assert_eq!(cpu.regs[Reg::B], 0x00);
+        assert_eq!(cpu.regs[Reg::C], 0x00);
+    }
+
+    #[test]
+    fn test_run_cpir() {
+        // TODO: Review the "Condition Bits Affected" from z80 user manual
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::H] = 0x11;
+        cpu.regs[Reg::L] = 0x11;
+        cpu.regs[Reg::A] = 0xF3;
+        cpu.mem[0x1111] = 0x52;
+        cpu.mem[0x1112] = 0x00;
+        cpu.mem[0x1113] = 0xF3;
+        cpu.regs[Reg::B] = 0x00;
+        cpu.regs[Reg::C] = 0x07;
+
+        cpu.run_op(Opcode::CPIR);
+        assert_eq!(cpu.regs[Reg::H], 0x11);
+        assert_eq!(cpu.regs[Reg::L], 0x14);
+        assert_eq!(cpu.regs[Reg::A], 0xF3);
+        assert_eq!(cpu.regs[Reg::B], 0x00);
+        assert_eq!(cpu.regs[Reg::C], 0x04);
+        assert_eq!(cpu.mem[0x1111], 0x52);
+        assert_eq!(cpu.mem[0x1112], 0x00);
+        assert_eq!(cpu.mem[0x1113], 0xF3);
+    }
+
+    #[test]
+    fn test_run_cpd() {
+        // TODO: Review the "Condition Bits Affected" from z80 user manual
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::H] = 0x11;
+        cpu.regs[Reg::L] = 0x11;
+        cpu.mem[0x1111] = 0x3B;
+        cpu.regs[Reg::A] = 0x3B;
+        cpu.regs[Reg::B] = 0x00;
+        cpu.regs[Reg::C] = 0x01;
+
+        cpu.run_op(Opcode::CPD);
+        assert_eq!(cpu.mem[0x1111], 0x3B);
+        assert_eq!(cpu.regs[Reg::H], 0x11);
+        assert_eq!(cpu.regs[Reg::L], 0x10);
+        assert_eq!(cpu.regs[Reg::A], 0x3B);
+        assert_eq!(cpu.regs[Reg::B], 0x00);
+        assert_eq!(cpu.regs[Reg::C], 0x00);
+    }
+
+    #[test]
+    fn test_run_cpdr() {
+        // TODO: Review the "Condition Bits Affected" from z80 user manual
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::H] = 0x11;
+        cpu.regs[Reg::L] = 0x18;
+        cpu.regs[Reg::A] = 0xF3;
+        cpu.mem[0x1118] = 0x52;
+        cpu.mem[0x1117] = 0x00;
+        cpu.mem[0x1116] = 0xF3;
+        cpu.regs[Reg::B] = 0x00;
+        cpu.regs[Reg::C] = 0x07;
+
+        cpu.run_op(Opcode::CPDR);
+        assert_eq!(cpu.regs[Reg::H], 0x11);
+        assert_eq!(cpu.regs[Reg::L], 0x15);
+        assert_eq!(cpu.regs[Reg::A], 0xF3);
+        assert_eq!(cpu.regs[Reg::B], 0x00);
+        assert_eq!(cpu.regs[Reg::C], 0x04);
+        assert_eq!(cpu.mem[0x1118], 0x52);
+        assert_eq!(cpu.mem[0x1117], 0x00);
+        assert_eq!(cpu.mem[0x1116], 0xF3);
     }
 }
