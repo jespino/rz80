@@ -20,15 +20,6 @@ impl IndexMut<Reg> for [u8] {
     }
 }
 
-struct Z80Flags {
-    s: bool,
-    z: bool,
-    h: bool,
-    p: bool,
-    n: bool,
-    c: bool,
-}
-
 struct Z80 {
     regs: [u8; 16],
 
@@ -39,8 +30,6 @@ struct Z80 {
     sp: u16,
     pc: u16,
 
-    flags: Z80Flags,
-
     mem: Memory,
 }
 
@@ -49,7 +38,6 @@ impl Z80 {
         Z80 {
             regs: [0; 16],
             i: 0, r: 0, ix: 0, iy: 0, sp: 0, pc:0,
-            flags: Z80Flags { s: false, z: false, h: false, p: false, n: false, c: false },
             mem: [0;65536]
         }
     }
