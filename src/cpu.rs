@@ -420,6 +420,85 @@ impl Z80 {
 
                 // TODO: Set flags
             },
+            Opcode::ADDAR(reg) => {
+                self.regs[Reg::A] += self.regs[reg];
+                // TODO: Set flags
+            },
+            Opcode::ADDAN(value) => {
+                self.regs[Reg::A] += value;
+                // TODO: Set flags
+            },
+            Opcode::ADDAHL => {
+                let address = self.get_reg_pair(Reg::H, Reg::L);
+                self.regs[Reg::A] += self.mem[address as usize];
+                // TODO: Set flags
+            },
+            Opcode::ADDAIXD(displacement) => {
+                let address = self.ix + displacement as u16;
+                self.regs[Reg::A] += self.mem[address as usize];
+                // TODO: Set flags
+            },
+            Opcode::ADDAIYD(displacement) => {
+                let address = self.iy + displacement as u16;
+                self.regs[Reg::A] += self.mem[address as usize];
+                // TODO: Set flags
+            },
+            Opcode::SUBAR(reg) => {
+                self.regs[Reg::A] -= self.regs[reg];
+                // TODO: Set flags
+            },
+            Opcode::SUBAN(value) => {
+                self.regs[Reg::A] -= value;
+                // TODO: Set flags
+            },
+            Opcode::SUBAHL => {
+                let address = self.get_reg_pair(Reg::H, Reg::L);
+                self.regs[Reg::A] -= self.mem[address as usize];
+                // TODO: Set flags
+            },
+            Opcode::SUBAIXD(displacement) => {
+                let address = self.ix + displacement as u16;
+                self.regs[Reg::A] -= self.mem[address as usize];
+                // TODO: Set flags
+            },
+            Opcode::SUBAIYD(displacement) => {
+                let address = self.iy + displacement as u16;
+                self.regs[Reg::A] -= self.mem[address as usize];
+                // TODO: Set flags
+            },
+            Opcode::SBCAR(reg) => {
+                let carry = self.regs[Reg::F] & 0b00000001;
+                self.regs[Reg::A] -= self.regs[reg];
+                self.regs[Reg::A] -= carry;
+                // TODO: Set flags
+            },
+            Opcode::SBCAN(value) => {
+                let carry = self.regs[Reg::F] & 0b00000001;
+                self.regs[Reg::A] -= value;
+                self.regs[Reg::A] -= carry;
+                // TODO: Set flags
+            },
+            Opcode::SBCAHL => {
+                let carry = self.regs[Reg::F] & 0b00000001;
+                let address = self.get_reg_pair(Reg::H, Reg::L);
+                self.regs[Reg::A] -= self.mem[address as usize];
+                self.regs[Reg::A] -= carry;
+                // TODO: Set flags
+            },
+            Opcode::SBCAIXD(displacement) => {
+                let carry = self.regs[Reg::F] & 0b00000001;
+                let address = self.ix + displacement as u16;
+                self.regs[Reg::A] -= self.mem[address as usize];
+                self.regs[Reg::A] -= carry;
+                // TODO: Set flags
+            },
+            Opcode::SBCAIYD(displacement) => {
+                let carry = self.regs[Reg::F] & 0b00000001;
+                let address = self.iy + displacement as u16;
+                self.regs[Reg::A] -= self.mem[address as usize];
+                self.regs[Reg::A] -= carry;
+                // TODO: Set flags
+            },
             _ => ()
         }
     }
@@ -1114,5 +1193,172 @@ mod test {
         assert_eq!(cpu.mem[0x1118], 0x52);
         assert_eq!(cpu.mem[0x1117], 0x00);
         assert_eq!(cpu.mem[0x1116], 0xF3);
+    }
+
+    #[test]
+    fn test_run_addar() {
+        // TODO: Review the "Condition Bits Affected" from z80 user manual
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::A] = 0x44;
+        cpu.regs[Reg::B] = 0x11;
+        cpu.run_op(Opcode::ADDAR(Reg::B));
+        assert_eq!(cpu.regs[Reg::A], 0x55);
+        assert_eq!(cpu.regs[Reg::B], 0x11);
+    }
+
+    #[test]
+    fn test_run_addan() {
+        // TODO: Review the "Condition Bits Affected" from z80 user manual
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::A] = 0x44;
+        cpu.run_op(Opcode::ADDAN(0x11));
+        assert_eq!(cpu.regs[Reg::A], 0x55);
+    }
+
+    #[test]
+    fn test_run_addahl() {
+        // TODO: Review the "Condition Bits Affected" from z80 user manual
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::A] = 0xA0;
+        cpu.regs[Reg::H] = 0x23;
+        cpu.regs[Reg::L] = 0x23;
+        cpu.mem[0x2323] = 0x08;
+        cpu.run_op(Opcode::ADDAHL);
+        assert_eq!(cpu.regs[Reg::A], 0xA8);
+    }
+
+    #[test]
+    fn test_run_addaixd() {
+        // TODO: Review the "Condition Bits Affected" from z80 user manual
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::A] = 0x11;
+        cpu.ix = 0x1000;
+        cpu.mem[0x1005] = 0x22;
+        cpu.run_op(Opcode::ADDAIXD(0x5));
+        assert_eq!(cpu.regs[Reg::A], 0x33);
+    }
+
+    #[test]
+    fn test_run_addaiyd() {
+        // TODO: Review the "Condition Bits Affected" from z80 user manual
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::A] = 0x11;
+        cpu.iy = 0x1000;
+        cpu.mem[0x1005] = 0x22;
+        cpu.run_op(Opcode::ADDAIYD(0x5));
+        assert_eq!(cpu.regs[Reg::A], 0x33);
+    }
+
+    #[test]
+    fn test_run_subar() {
+        // TODO: Review the "Condition Bits Affected" from z80 user manual
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::A] = 0x44;
+        cpu.regs[Reg::B] = 0x11;
+        cpu.run_op(Opcode::SUBAR(Reg::B));
+        assert_eq!(cpu.regs[Reg::A], 0x33);
+        assert_eq!(cpu.regs[Reg::B], 0x11);
+    }
+
+    #[test]
+    fn test_run_suban() {
+        // TODO: Review the "Condition Bits Affected" from z80 user manual
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::A] = 0x44;
+        cpu.run_op(Opcode::SUBAN(0x11));
+        assert_eq!(cpu.regs[Reg::A], 0x33);
+    }
+
+    #[test]
+    fn test_run_subahl() {
+        // TODO: Review the "Condition Bits Affected" from z80 user manual
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::A] = 0xA8;
+        cpu.regs[Reg::H] = 0x23;
+        cpu.regs[Reg::L] = 0x23;
+        cpu.mem[0x2323] = 0x08;
+        cpu.run_op(Opcode::SUBAHL);
+        assert_eq!(cpu.regs[Reg::A], 0xA0);
+    }
+
+    #[test]
+    fn test_run_subaixd() {
+        // TODO: Review the "Condition Bits Affected" from z80 user manual
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::A] = 0x33;
+        cpu.ix = 0x1000;
+        cpu.mem[0x1005] = 0x11;
+        cpu.run_op(Opcode::SUBAIXD(0x5));
+        assert_eq!(cpu.regs[Reg::A], 0x22);
+    }
+
+    #[test]
+    fn test_run_subaiyd() {
+        // TODO: Review the "Condition Bits Affected" from z80 user manual
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::A] = 0x33;
+        cpu.iy = 0x1000;
+        cpu.mem[0x1005] = 0x11;
+        cpu.run_op(Opcode::SUBAIYD(0x5));
+        assert_eq!(cpu.regs[Reg::A], 0x22);
+    }
+
+    #[test]
+    fn test_run_sbcar() {
+        // TODO: Review the "Condition Bits Affected" from z80 user manual
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::A] = 0x44;
+        cpu.regs[Reg::F] = 0b00000001;
+        cpu.regs[Reg::B] = 0x11;
+        cpu.run_op(Opcode::SBCAR(Reg::B));
+        assert_eq!(cpu.regs[Reg::A], 0x32);
+        assert_eq!(cpu.regs[Reg::B], 0x11);
+    }
+
+    #[test]
+    fn test_run_sbcan() {
+        // TODO: Review the "Condition Bits Affected" from z80 user manual
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::A] = 0x44;
+        cpu.regs[Reg::F] = 0b00000001;
+        cpu.run_op(Opcode::SBCAN(0x11));
+        assert_eq!(cpu.regs[Reg::A], 0x32);
+    }
+
+    #[test]
+    fn test_run_sbcahl() {
+        // TODO: Review the "Condition Bits Affected" from z80 user manual
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::A] = 0xA8;
+        cpu.regs[Reg::F] = 0b00000001;
+        cpu.regs[Reg::H] = 0x23;
+        cpu.regs[Reg::L] = 0x23;
+        cpu.mem[0x2323] = 0x08;
+        cpu.run_op(Opcode::SBCAHL);
+        assert_eq!(cpu.regs[Reg::A], 0x9F);
+    }
+
+    #[test]
+    fn test_run_sbcaixd() {
+        // TODO: Review the "Condition Bits Affected" from z80 user manual
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::A] = 0x33;
+        cpu.regs[Reg::F] = 0b00000001;
+        cpu.ix = 0x1000;
+        cpu.mem[0x1005] = 0x11;
+        cpu.run_op(Opcode::SBCAIXD(0x5));
+        assert_eq!(cpu.regs[Reg::A], 0x21);
+    }
+
+    #[test]
+    fn test_run_sbcaiyd() {
+        // TODO: Review the "Condition Bits Affected" from z80 user manual
+        let mut cpu = Z80::new();
+        cpu.regs[Reg::A] = 0x33;
+        cpu.regs[Reg::F] = 0b00000001;
+        cpu.iy = 0x1000;
+        cpu.mem[0x1005] = 0x11;
+        cpu.run_op(Opcode::SBCAIYD(0x5));
+        assert_eq!(cpu.regs[Reg::A], 0x21);
     }
 }
