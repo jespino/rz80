@@ -277,15 +277,21 @@ fn byte_to_bits(byte: u8) -> (u8, u8, u8, u8, u8, u8, u8, u8) {
 }
 
 
-fn parse_op(code: &mut Iterator<Item=u8>) -> Opcode {
+fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
     match byte_to_bits(code.next().unwrap()) {
         (0, 1, r11, r12, r13, r21, r22, r23) => {
-            Opcode::LDRR(
+            (1, Opcode::LDRR(
                 bits_to_reg(r11, r12, r13),
                 bits_to_reg(r21, r22, r23),
-            )
+            ))
         },
-        _ => Opcode::NOP
+        (0, 0, r11, r12, r13, 1, 1, 0) => {
+            (2, Opcode::LDRN(
+                bits_to_reg(r11, r12, r13),
+                code.next().unwrap(),
+            ))
+        },
+        _ => (0, Opcode::NOP)
     }
 }
 
@@ -293,10 +299,23 @@ fn parse_op(code: &mut Iterator<Item=u8>) -> Opcode {
 #[test]
 fn parse_ldrr() {
     let data = vec![0b01111000];
-    let op = parse_op(&mut data.into_iter());
+    let (bytes, op) = parse_op(&mut data.into_iter());
 
+    assert_eq!(bytes, 1);
     match op {
         Opcode::LDRR(Reg::A, Reg::B) => assert!(true),
+        _ => assert!(false)
+    }
+}
+
+#[test]
+fn parse_ldrn() {
+    let data = vec![0b00111110, 0b00000001];
+    let (bytes, op) = parse_op(&mut data.into_iter());
+
+    assert_eq!(bytes, 2);
+    match op {
+        Opcode::LDRN(Reg::A, 1) => assert!(true),
         _ => assert!(false)
     }
 }
