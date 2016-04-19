@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub enum Condition {
     NonZero = 0b000,
     Zero = 0b001,
@@ -9,6 +10,7 @@ pub enum Condition {
     NegativeSign = 0b111,
 }
 
+#[derive(Debug)]
 pub enum Reg {
     A = 0,
     B = 1,
@@ -28,6 +30,7 @@ pub enum Reg {
     L2 = 15,
 }
 
+#[derive(Debug)]
 pub enum BigReg {
     BC = 0,
     DE = 1,
@@ -44,6 +47,7 @@ pub type Value = u8;
 pub type Address = u16;
 pub type Displacement = u8;
 
+#[derive(Debug)]
 pub enum Opcode {
     LDRR(Reg, Reg),
     LDRN(Reg, Value),
@@ -246,4 +250,53 @@ pub enum Opcode {
     OTIR,
     OUTD,
     OTDR,
+}
+
+fn bits_to_reg(bit1: u8, bit2: u8, bit3: u8) -> Reg {
+    match (bit1, bit2, bit3) {
+        (1,1,1) => Reg::A,
+        (0,0,0) => Reg::B,
+        (0,0,1) => Reg::C,
+        (0,1,0) => Reg::D,
+        (0,1,1) => Reg::E,
+        (1,0,0) => Reg::H,
+        (1,0,1) => Reg::L,
+        _ => unreachable!()
+    }
+}
+
+fn byte_to_bits(byte: u8) -> (u8, u8, u8, u8, u8, u8, u8, u8) {
+    (byte >> 7 & 1,
+     byte >> 6 & 1,
+     byte >> 5 & 1,
+     byte >> 4 & 1,
+     byte >> 3 & 1,
+     byte >> 2 & 1,
+     byte >> 1 & 1,
+     byte & 1)
+}
+
+
+fn parse_op(code: &mut Iterator<Item=u8>) -> Opcode {
+    match byte_to_bits(code.next().unwrap()) {
+        (0, 1, r11, r12, r13, r21, r22, r23) => {
+            Opcode::LDRR(
+                bits_to_reg(r11, r12, r13),
+                bits_to_reg(r21, r22, r23),
+            )
+        },
+        _ => Opcode::NOP
+    }
+}
+
+
+#[test]
+fn parse_ldrr() {
+    let data = vec![0b01111000];
+    let op = parse_op(&mut data.into_iter());
+
+    match op {
+        Opcode::LDRR(Reg::A, Reg::B) => assert!(true),
+        _ => assert!(false)
+    }
 }
