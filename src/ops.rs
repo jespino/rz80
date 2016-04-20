@@ -279,6 +279,16 @@ fn byte_to_bits(byte: u8) -> (u8, u8, u8, u8, u8, u8, u8, u8) {
 
 fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
     match byte_to_bits(code.next().unwrap()) {
+        (0, 1, 1, 1, 0, r11, r12, r13) => {
+            (1, Opcode::LDHLR(
+                bits_to_reg(r11, r12, r13),
+            ))
+        },
+        (0, 1, r11, r12, r13, 1, 1, 0) => {
+            (1, Opcode::LDRHL(
+                bits_to_reg(r11, r12, r13),
+            ))
+        },
         (0, 1, r11, r12, r13, r21, r22, r23) => {
             (1, Opcode::LDRR(
                 bits_to_reg(r11, r12, r13),
@@ -291,31 +301,79 @@ fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
                 code.next().unwrap(),
             ))
         },
+        (1, 1, 0, 1, 1, 1, 0, 1) => {
+            match byte_to_bits(code.next().unwrap()) {
+                (0, 1, r11, r12, r13, 1, 1, 0) => {
+                    (3, Opcode::LDRIXD(
+                        bits_to_reg(r11, r12, r13),
+                        code.next().unwrap(),
+                    ))
+                },
+                _ => (0, Opcode::NOP)
+            }
+        },
+        (1, 1, 1, 1, 1, 1, 0, 1) => {
+            match byte_to_bits(code.next().unwrap()) {
+                (0, 1, r11, r12, r13, 1, 1, 0) => {
+                    (3, Opcode::LDRIYD(
+                        bits_to_reg(r11, r12, r13),
+                        code.next().unwrap(),
+                    ))
+                },
+                _ => (0, Opcode::NOP)
+            }
+        },
         _ => (0, Opcode::NOP)
     }
 }
 
 
-#[test]
-fn parse_ldrr() {
-    let data = vec![0b01111000];
-    let (bytes, op) = parse_op(&mut data.into_iter());
+#[cfg(test)]
+mod test {
+    use super::parse_op;
+    use super::Reg;
+    use super::Opcode;
 
-    assert_eq!(bytes, 1);
-    match op {
-        Opcode::LDRR(Reg::A, Reg::B) => assert!(true),
-        _ => assert!(false)
+    macro_rules! assert_op {
+        ($data:expr, $size:expr, $op:pat) => {{
+            let (bytes, op) = parse_op(&mut $data.into_iter());
+            assert_eq!(bytes, $size);
+            match op {
+                $op => assert!(true),
+                _ => assert!(false)
+            }
+        }}
     }
-}
 
-#[test]
-fn parse_ldrn() {
-    let data = vec![0b00111110, 0b00000001];
-    let (bytes, op) = parse_op(&mut data.into_iter());
+    #[test]
+    fn test_parse_ldrr() {
+        assert_op!(vec![0b01111000], 1, Opcode::LDRR(Reg::A, Reg::B));
+    }
 
-    assert_eq!(bytes, 2);
-    match op {
-        Opcode::LDRN(Reg::A, 1) => assert!(true),
-        _ => assert!(false)
+    #[test]
+    fn test_parse_ldrn() {
+        assert_op!(vec![0b00111110, 0b00000001], 2, Opcode::LDRN(Reg::A, 1));
+    }
+
+    #[test]
+    fn test_parse_ldrhl() {
+        assert_op!(vec![0b01111110], 1, Opcode::LDRHL(Reg::A));
+    }
+
+    #[test]
+    fn test_parse_ldrixd() {
+        assert_op!(vec![0b11011101, 0b01111110, 0b00000001], 3,
+                   Opcode::LDRIXD(Reg::A, 1));
+    }
+
+    #[test]
+    fn test_parse_ldriyd() {
+        assert_op!(vec![0b11111101, 0b01111110, 0b00000001], 3,
+                   Opcode::LDRIYD(Reg::A, 1));
+    }
+
+    #[test]
+    fn test_parse_ldhlr() {
+        assert_op!(vec![0b01110111], 1, Opcode::LDHLR(Reg::A));
     }
 }
