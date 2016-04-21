@@ -279,6 +279,12 @@ fn byte_to_bits(byte: u8) -> (u8, u8, u8, u8, u8, u8, u8, u8) {
 
 fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
     match byte_to_bits(code.next().unwrap()) {
+        (0, 0, 0, 0, 1, 0, 1, 0) => {
+            (1, Opcode::LDABC)
+        },
+        (0, 0, 0, 1, 1, 0, 1, 0) => {
+            (1, Opcode::LDADE)
+        },
         (0, 1, 1, 1, 0, r11, r12, r13) => {
             (1, Opcode::LDHLR(
                 bits_to_reg(r11, r12, r13),
@@ -306,6 +312,12 @@ fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
         },
         (1, 1, 0, 1, 1, 1, 0, 1) => {
             match byte_to_bits(code.next().unwrap()) {
+                (0, 0, 1, 1, 0, 1, 1, 0) => {
+                    (4, Opcode::LDIXDN(
+                        code.next().unwrap(),
+                        code.next().unwrap(),
+                    ))
+                },
                 (0, 1, 1, 1, 0, r11, r12, r13) => {
                     (3, Opcode::LDIXDR(
                         code.next().unwrap(),
@@ -323,6 +335,12 @@ fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
         },
         (1, 1, 1, 1, 1, 1, 0, 1) => {
             match byte_to_bits(code.next().unwrap()) {
+                (0, 0, 1, 1, 0, 1, 1, 0) => {
+                    (4, Opcode::LDIYDN(
+                        code.next().unwrap(),
+                        code.next().unwrap(),
+                    ))
+                },
                 (0, 1, 1, 1, 0, r11, r12, r13) => {
                     (3, Opcode::LDIYDR(
                         code.next().unwrap(),
@@ -405,5 +423,25 @@ mod test {
     #[test]
     fn test_parse_ldhln() {
         assert_op!(vec![0b00110110, 0b00000001], 2, Opcode::LDHLN(1));
+    }
+
+    #[test]
+    fn test_parse_ldixdn() {
+        assert_op!(vec![0b11011101, 0b00110110, 0b00000001, 0b00000010], 4, Opcode::LDIXDN(1, 2));
+    }
+
+    #[test]
+    fn test_parse_ldiydn() {
+        assert_op!(vec![0b11111101, 0b00110110, 0b00000001, 0b00000010], 4, Opcode::LDIYDN(1, 2));
+    }
+
+    #[test]
+    fn test_parse_ldabc() {
+        assert_op!(vec![0b00001010], 1, Opcode::LDABC);
+    }
+
+    #[test]
+    fn test_parse_ldade() {
+        assert_op!(vec![0b00011010], 1, Opcode::LDADE);
     }
 }
