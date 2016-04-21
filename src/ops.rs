@@ -295,6 +295,9 @@ fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
                 bits_to_reg(r21, r22, r23),
             ))
         },
+        (0, 0, 1, 1, 0, 1, 1, 0) => {
+            (2, Opcode::LDHLN(code.next().unwrap()))
+        },
         (0, 0, r11, r12, r13, 1, 1, 0) => {
             (2, Opcode::LDRN(
                 bits_to_reg(r11, r12, r13),
@@ -303,6 +306,12 @@ fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
         },
         (1, 1, 0, 1, 1, 1, 0, 1) => {
             match byte_to_bits(code.next().unwrap()) {
+                (0, 1, 1, 1, 0, r11, r12, r13) => {
+                    (3, Opcode::LDIXDR(
+                        code.next().unwrap(),
+                        bits_to_reg(r11, r12, r13),
+                    ))
+                },
                 (0, 1, r11, r12, r13, 1, 1, 0) => {
                     (3, Opcode::LDRIXD(
                         bits_to_reg(r11, r12, r13),
@@ -314,6 +323,12 @@ fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
         },
         (1, 1, 1, 1, 1, 1, 0, 1) => {
             match byte_to_bits(code.next().unwrap()) {
+                (0, 1, 1, 1, 0, r11, r12, r13) => {
+                    (3, Opcode::LDIYDR(
+                        code.next().unwrap(),
+                        bits_to_reg(r11, r12, r13),
+                    ))
+                },
                 (0, 1, r11, r12, r13, 1, 1, 0) => {
                     (3, Opcode::LDRIYD(
                         bits_to_reg(r11, r12, r13),
@@ -375,5 +390,20 @@ mod test {
     #[test]
     fn test_parse_ldhlr() {
         assert_op!(vec![0b01110111], 1, Opcode::LDHLR(Reg::A));
+    }
+
+    #[test]
+    fn test_parse_ldixdr() {
+        assert_op!(vec![0b11011101, 0b01110111, 0b00000001], 3, Opcode::LDIXDR(1, Reg::A));
+    }
+
+    #[test]
+    fn test_parse_ldiydr() {
+        assert_op!(vec![0b11111101, 0b01110111, 0b00000001], 3, Opcode::LDIYDR(1, Reg::A));
+    }
+
+    #[test]
+    fn test_parse_ldhln() {
+        assert_op!(vec![0b00110110, 0b00000001], 2, Opcode::LDHLN(1));
     }
 }
