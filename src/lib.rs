@@ -1,2 +1,2 @@
-mod ops;
-mod cpu;
+pub mod ops;
+pub mod cpu;
