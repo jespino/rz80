@@ -81,3 +81,43 @@ fn test_parse_ldabc() {
 fn test_parse_ldade() {
     assert_op!(vec![0b00011010], 1, Opcode::LDADE);
 }
+
+#[test]
+fn test_parse_ldann() {
+    assert_op!(vec![0b00111010, 0b00000001, 0b00000010], 3, Opcode::LDANN(258));
+}
+
+#[test]
+fn test_parse_ldbca() {
+    assert_op!(vec![0b00000010], 1, Opcode::LDBCA);
+}
+
+#[test]
+fn test_parse_lddea() {
+    assert_op!(vec![0b00010010], 1, Opcode::LDDEA);
+}
+
+#[test]
+fn test_parse_ldnna() {
+    assert_op!(vec![0b00110010, 0b00000001, 0b00000010], 3, Opcode::LDNNA(258));
+}
+
+#[test]
+fn test_parse_ldai() {
+    assert_op!(vec![0xED, 0x57], 2, Opcode::LDAI);
+}
+
+#[test]
+fn test_parse_ldar() {
+    assert_op!(vec![0xED, 0x5F], 2, Opcode::LDAR);
+}
+
+#[test]
+fn test_parse_ldia() {
+    assert_op!(vec![0xED, 0x47], 2, Opcode::LDIA);
+}
+
+#[test]
+fn test_parse_ldra() {
+    assert_op!(vec![0xED, 0x4F], 2, Opcode::LDRA);
+}
