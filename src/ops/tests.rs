@@ -2,6 +2,7 @@
 
 use ops::parser::parse_op;
 use ops::opcodes::Reg;
+use ops::opcodes::BigReg;
 use ops::opcodes::Opcode;
 
 macro_rules! assert_op {
@@ -120,4 +121,24 @@ fn test_parse_ldia() {
 #[test]
 fn test_parse_ldra() {
     assert_op!(vec![0xED, 0x4F], 2, Opcode::LDRA);
+}
+
+#[test]
+fn test_parse_ldddnn() {
+    assert_op!(vec![0b00000001, 0b00000001, 0b00000010], 3, Opcode::LDDDNN(BigReg::BC, 258));
+}
+
+#[test]
+fn test_parse_ldixnn() {
+    assert_op!(vec![0xDD, 0x21, 1, 2], 4, Opcode::LDIXNN(258));
+}
+
+#[test]
+fn test_parse_ldiynn() {
+    assert_op!(vec![0xFD, 0x21, 1, 2], 4, Opcode::LDIYNN(258));
+}
+
+#[test]
+fn test_parse_ldhlnn() {
+    assert_op!(vec![0x2A, 1, 2], 3, Opcode::LDHLNN(258));
 }

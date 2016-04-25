@@ -1,4 +1,5 @@
 use ops::opcodes::Reg;
+use ops::opcodes::BigReg;
 use ops::opcodes::Opcode;
 
 fn bits_to_reg(bit1: u8, bit2: u8, bit3: u8) -> Reg {
@@ -10,6 +11,16 @@ fn bits_to_reg(bit1: u8, bit2: u8, bit3: u8) -> Reg {
         (0,1,1) => Reg::E,
         (1,0,0) => Reg::H,
         (1,0,1) => Reg::L,
+        _ => unreachable!()
+    }
+}
+
+fn bits_to_bigreg1(bit1: u8, bit2: u8) -> BigReg {
+    match (bit1, bit2) {
+        (0,0) => BigReg::BC,
+        (0,1) => BigReg::DE,
+        (1,0) => BigReg::HL,
+        (1,1) => BigReg::SP,
         _ => unreachable!()
     }
 }
@@ -33,6 +44,11 @@ pub fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
         0x02 => (1, Opcode::LDBCA),
         0x12 => (1, Opcode::LDDEA),
         0x1A => (1, Opcode::LDADE),
+        0x2A => {
+            let byte1 = (code.next().unwrap() as u16) << 8;
+            let byte2 = code.next().unwrap() as u16;
+            (3, Opcode::LDHLNN(byte1 + byte2))
+        }
         0x32 => {
             let byte1 = (code.next().unwrap() as u16) << 8;
             let byte2 = code.next().unwrap() as u16;
@@ -57,6 +73,11 @@ pub fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
         0xDD => {
             let second_byte = code.next().unwrap();
             match second_byte {
+                0x21 => {
+                    let byte1 = (code.next().unwrap() as u16) << 8;
+                    let byte2 = code.next().unwrap() as u16;
+                    (4, Opcode::LDIXNN(byte1 + byte2))
+                },
                 0x36 => {
                     (4, Opcode::LDIXDN(
                         code.next().unwrap(),
@@ -83,6 +104,11 @@ pub fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
         0xFD => {
             let second_byte = code.next().unwrap();
             match second_byte {
+                0x21 => {
+                    let byte1 = (code.next().unwrap() as u16) << 8;
+                    let byte2 = code.next().unwrap() as u16;
+                    (4, Opcode::LDIYNN(byte1 + byte2))
+                },
                 0x36 => {
                     (4, Opcode::LDIYDN(
                         code.next().unwrap(),
@@ -127,6 +153,14 @@ pub fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
                 (2, Opcode::LDRN(
                     bits_to_reg(r11, r12, r13),
                     code.next().unwrap(),
+                ))
+            },
+            (0, 0, d1, d2, 0, 0, 0, 1) => {
+                let byte1 = (code.next().unwrap() as u16) << 8;
+                let byte2 = code.next().unwrap() as u16;
+                (3, Opcode::LDDDNN(
+                    bits_to_bigreg1(d1, d2),
+                    byte1 + byte2,
                 ))
             },
             _ => (0, Opcode::NOP)
