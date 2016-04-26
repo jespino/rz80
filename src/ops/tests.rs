@@ -142,3 +142,53 @@ fn test_parse_ldiynn() {
 fn test_parse_ldhlnn() {
     assert_op!(vec![0x2A, 1, 2], 3, Opcode::LDHLNN(258));
 }
+
+#[test]
+fn test_parse_ldddnn2() {
+    assert_op!(vec![0xED, 0b01001011, 1, 2], 4, Opcode::LDDDNN2(BigReg::BC, 258));
+}
+
+#[test]
+fn test_parse_ldixnn2() {
+    assert_op!(vec![0xDD, 0x2A, 1, 2], 4, Opcode::LDIXNN2(258));
+}
+
+#[test]
+fn test_parse_ldiynn2() {
+    assert_op!(vec![0xFD, 0x2A, 1, 2], 4, Opcode::LDIYNN2(258));
+}
+
+#[test]
+fn test_parse_ldnnhl() {
+    assert_op!(vec![0x22, 1, 2], 3, Opcode::LDNNHL(258));
+}
+
+#[test]
+fn test_parse_ldnndd() {
+    assert_op!(vec![0xED, 0b01000011, 1, 2], 4, Opcode::LDNNDD(258, BigReg::BC));
+}
+
+#[test]
+fn test_parse_ldnnix() {
+    assert_op!(vec![0xDD, 0x22, 1, 2], 4, Opcode::LDNNIX(258));
+}
+
+#[test]
+fn test_parse_ldnniy() {
+    assert_op!(vec![0xFD, 0x22, 1, 2], 4, Opcode::LDNNIY(258));
+}
+
+#[test]
+fn test_parse_ldsphl() {
+    assert_op!(vec![0xF9], 1, Opcode::LDSPHL);
+}
+
+#[test]
+fn test_parse_ldspix() {
+    assert_op!(vec![0xDD, 0xF9], 2, Opcode::LDSPIX);
+}
+
+#[test]
+fn test_parse_ldspiy() {
+    assert_op!(vec![0xFD, 0xF9], 2, Opcode::LDSPIY);
+}

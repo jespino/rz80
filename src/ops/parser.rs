@@ -44,6 +44,11 @@ pub fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
         0x02 => (1, Opcode::LDBCA),
         0x12 => (1, Opcode::LDDEA),
         0x1A => (1, Opcode::LDADE),
+        0x22 => {
+            let byte1 = (code.next().unwrap() as u16) << 8;
+            let byte2 = code.next().unwrap() as u16;
+            (3, Opcode::LDNNHL(byte1 + byte2))
+        }
         0x2A => {
             let byte1 = (code.next().unwrap() as u16) << 8;
             let byte2 = code.next().unwrap() as u16;
@@ -67,7 +72,25 @@ pub fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
                 0x5F => (2, Opcode::LDAR),
                 0x47 => (2, Opcode::LDIA),
                 0x4F => (2, Opcode::LDRA),
-                _ => (0, Opcode::NOP)
+                _ => match byte_to_bits(second_byte) {
+                    (0, 1, d1, d2, 1, 0, 1, 1) => {
+                        let byte1 = (code.next().unwrap() as u16) << 8;
+                        let byte2 = code.next().unwrap() as u16;
+                        (4, Opcode::LDDDNN2(
+                            bits_to_bigreg1(d1, d2),
+                            byte1 + byte2,
+                        ))
+                    },
+                    (0, 1, d1, d2, 0, 0, 1, 1) => {
+                        let byte1 = (code.next().unwrap() as u16) << 8;
+                        let byte2 = code.next().unwrap() as u16;
+                        (4, Opcode::LDNNDD(
+                            byte1 + byte2,
+                            bits_to_bigreg1(d1, d2),
+                        ))
+                    },
+                    _ => (0, Opcode::NOP)
+                }
             }
         },
         0xDD => {
@@ -78,12 +101,23 @@ pub fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
                     let byte2 = code.next().unwrap() as u16;
                     (4, Opcode::LDIXNN(byte1 + byte2))
                 },
+                0x22 => {
+                    let byte1 = (code.next().unwrap() as u16) << 8;
+                    let byte2 = code.next().unwrap() as u16;
+                    (4, Opcode::LDNNIX(byte1 + byte2))
+                },
+                0x2A => {
+                    let byte1 = (code.next().unwrap() as u16) << 8;
+                    let byte2 = code.next().unwrap() as u16;
+                    (4, Opcode::LDIXNN2(byte1 + byte2))
+                },
                 0x36 => {
                     (4, Opcode::LDIXDN(
                         code.next().unwrap(),
                         code.next().unwrap(),
                     ))
                 },
+                0xF9 => (2, Opcode::LDSPIX),
                 _ => match byte_to_bits(second_byte) {
                     (0, 1, 1, 1, 0, r11, r12, r13) => {
                         (3, Opcode::LDIXDR(
@@ -109,12 +143,23 @@ pub fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
                     let byte2 = code.next().unwrap() as u16;
                     (4, Opcode::LDIYNN(byte1 + byte2))
                 },
+                0x22 => {
+                    let byte1 = (code.next().unwrap() as u16) << 8;
+                    let byte2 = code.next().unwrap() as u16;
+                    (4, Opcode::LDNNIY(byte1 + byte2))
+                },
+                0x2A => {
+                    let byte1 = (code.next().unwrap() as u16) << 8;
+                    let byte2 = code.next().unwrap() as u16;
+                    (4, Opcode::LDIYNN2(byte1 + byte2))
+                },
                 0x36 => {
                     (4, Opcode::LDIYDN(
                         code.next().unwrap(),
                         code.next().unwrap(),
                     ))
                 },
+                0xF9 => (2, Opcode::LDSPIY),
                 _ => match byte_to_bits(second_byte) {
                     (0, 1, 1, 1, 0, r11, r12, r13) => {
                         (3, Opcode::LDIYDR(
@@ -132,6 +177,7 @@ pub fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
                 }
             }
         },
+        0xF9 => (1, Opcode::LDSPHL),
         _ => match byte_to_bits(byte) {
             (0, 1, 1, 1, 0, r11, r12, r13) => {
                 (1, Opcode::LDHLR(
