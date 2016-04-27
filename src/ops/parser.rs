@@ -117,6 +117,8 @@ pub fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
                         code.next().unwrap(),
                     ))
                 },
+                0xE1 => (2, Opcode::POPIX),
+                0xE5 => (2, Opcode::PUSHIX),
                 0xF9 => (2, Opcode::LDSPIX),
                 _ => match byte_to_bits(second_byte) {
                     (0, 1, 1, 1, 0, r11, r12, r13) => {
@@ -159,6 +161,8 @@ pub fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
                         code.next().unwrap(),
                     ))
                 },
+                0xE1 => (2, Opcode::POPIY),
+                0xE5 => (2, Opcode::PUSHIY),
                 0xF9 => (2, Opcode::LDSPIY),
                 _ => match byte_to_bits(second_byte) {
                     (0, 1, 1, 1, 0, r11, r12, r13) => {
@@ -207,6 +211,16 @@ pub fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
                 (3, Opcode::LDDDNN(
                     bits_to_bigreg1(d1, d2),
                     byte1 + byte2,
+                ))
+            },
+            (1, 1, d1, d2, 0, 1, 0, 1) => {
+                (1, Opcode::PUSHQQ(
+                    bits_to_bigreg1(d1, d2),
+                ))
+            },
+            (1, 1, d1, d2, 0, 0, 0, 1) => {
+                (1, Opcode::POPQQ(
+                    bits_to_bigreg1(d1, d2),
                 ))
             },
             _ => (0, Opcode::NOP)

@@ -192,3 +192,33 @@ fn test_parse_ldspix() {
 fn test_parse_ldspiy() {
     assert_op!(vec![0xFD, 0xF9], 2, Opcode::LDSPIY);
 }
+
+#[test]
+fn test_parse_pushqq() {
+    assert_op!(vec![0b11000101], 1, Opcode::PUSHQQ(BigReg::BC));
+}
+
+#[test]
+fn test_parse_pushix() {
+    assert_op!(vec![0xDD, 0xE5], 2, Opcode::PUSHIX);
+}
+
+#[test]
+fn test_parse_pushiy() {
+    assert_op!(vec![0xFD, 0xE5], 2, Opcode::PUSHIY);
+}
+
+#[test]
+fn test_parse_popqq() {
+    assert_op!(vec![0b11000001], 1, Opcode::POPQQ(BigReg::BC));
+}
+
+#[test]
+fn test_parse_popix() {
+    assert_op!(vec![0xDD, 0xE1], 2, Opcode::POPIX);
+}
+
+#[test]
+fn test_parse_popiy() {
+    assert_op!(vec![0xFD, 0xE1], 2, Opcode::POPIY);
+}
