@@ -222,3 +222,73 @@ fn test_parse_popix() {
 fn test_parse_popiy() {
     assert_op!(vec![0xFD, 0xE1], 2, Opcode::POPIY);
 }
+
+#[test]
+fn test_parse_exdehl() {
+    assert_op!(vec![0xEB], 1, Opcode::EXDEHL);
+}
+
+#[test]
+fn test_parse_exafaf2() {
+    assert_op!(vec![0x08], 1, Opcode::EXAFAF2);
+}
+
+#[test]
+fn test_parse_exx() {
+    assert_op!(vec![0xD9], 1, Opcode::EXX);
+}
+
+#[test]
+fn test_parse_exsphl() {
+    assert_op!(vec![0xE3], 1, Opcode::EXSPHL);
+}
+
+#[test]
+fn test_parse_exspix() {
+    assert_op!(vec![0xDD, 0xE3], 2, Opcode::EXSPIX);
+}
+
+#[test]
+fn test_parse_exspiy() {
+    assert_op!(vec![0xFD, 0xE3], 2, Opcode::EXSPIY);
+}
+
+#[test]
+fn test_parse_ldi() {
+    assert_op!(vec![0xED, 0xA0], 2, Opcode::LDI);
+}
+
+#[test]
+fn test_parse_ldir() {
+    assert_op!(vec![0xED, 0xB0], 2, Opcode::LDIR);
+}
+
+#[test]
+fn test_parse_ldd() {
+    assert_op!(vec![0xED, 0xA8], 2, Opcode::LDD);
+}
+
+#[test]
+fn test_parse_lddr() {
+    assert_op!(vec![0xED, 0xB8], 2, Opcode::LDDR);
+}
+
+#[test]
+fn test_parse_cpi() {
+    assert_op!(vec![0xED, 0xA1], 2, Opcode::CPI);
+}
+
+#[test]
+fn test_parse_cpir() {
+    assert_op!(vec![0xED, 0xB1], 2, Opcode::CPIR);
+}
+
+#[test]
+fn test_parse_cpd() {
+    assert_op!(vec![0xED, 0xA9], 2, Opcode::CPD);
+}
+
+#[test]
+fn test_parse_cpdr() {
+    assert_op!(vec![0xED, 0xB9], 2, Opcode::CPDR);
+}

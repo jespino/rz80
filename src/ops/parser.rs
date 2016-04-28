@@ -40,8 +40,9 @@ fn byte_to_bits(byte: u8) -> (u8, u8, u8, u8, u8, u8, u8, u8) {
 pub fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
     let byte = code.next().unwrap();
     match byte {
-        0x0A => (1, Opcode::LDABC),
         0x02 => (1, Opcode::LDBCA),
+        0x08 => (1, Opcode::EXAFAF2),
+        0x0A => (1, Opcode::LDABC),
         0x12 => (1, Opcode::LDDEA),
         0x1A => (1, Opcode::LDADE),
         0x22 => {
@@ -65,6 +66,9 @@ pub fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
             (3, Opcode::LDANN(byte1 + byte2))
         },
         0x36 => (2, Opcode::LDHLN(code.next().unwrap())),
+        0xD9 => (1, Opcode::EXX),
+        0xE3 => (1, Opcode::EXSPHL),
+        0xEB => (1, Opcode::EXDEHL),
         0xED => {
             let second_byte = code.next().unwrap();
             match second_byte {
@@ -72,6 +76,14 @@ pub fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
                 0x5F => (2, Opcode::LDAR),
                 0x47 => (2, Opcode::LDIA),
                 0x4F => (2, Opcode::LDRA),
+                0xA0 => (2, Opcode::LDI),
+                0xA1 => (2, Opcode::CPI),
+                0xA8 => (2, Opcode::LDD),
+                0xA9 => (2, Opcode::CPD),
+                0xB0 => (2, Opcode::LDIR),
+                0xB1 => (2, Opcode::CPIR),
+                0xB8 => (2, Opcode::LDDR),
+                0xB9 => (2, Opcode::CPDR),
                 _ => match byte_to_bits(second_byte) {
                     (0, 1, d1, d2, 1, 0, 1, 1) => {
                         let byte1 = (code.next().unwrap() as u16) << 8;
@@ -118,6 +130,7 @@ pub fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
                     ))
                 },
                 0xE1 => (2, Opcode::POPIX),
+                0xE3 => (2, Opcode::EXSPIX),
                 0xE5 => (2, Opcode::PUSHIX),
                 0xF9 => (2, Opcode::LDSPIX),
                 _ => match byte_to_bits(second_byte) {
@@ -162,6 +175,7 @@ pub fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
                     ))
                 },
                 0xE1 => (2, Opcode::POPIY),
+                0xE3 => (2, Opcode::EXSPIY),
                 0xE5 => (2, Opcode::PUSHIY),
                 0xF9 => (2, Opcode::LDSPIY),
                 _ => match byte_to_bits(second_byte) {
