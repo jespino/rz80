@@ -292,3 +292,53 @@ fn test_parse_cpd() {
 fn test_parse_cpdr() {
     assert_op!(vec![0xED, 0xB9], 2, Opcode::CPDR);
 }
+
+#[test]
+fn test_parse_addar() {
+    assert_op!(vec![0b10000111], 1, Opcode::ADDAR(Reg::A));
+}
+
+#[test]
+fn test_parse_addan() {
+    assert_op!(vec![0xC6, 1], 2, Opcode::ADDAN(1));
+}
+
+#[test]
+fn test_parse_addahl() {
+    assert_op!(vec![0x86], 1, Opcode::ADDAHL);
+}
+
+#[test]
+fn test_parse_addaixd() {
+    assert_op!(vec![0xDD, 0x86, 1], 3, Opcode::ADDAIXD(1));
+}
+
+#[test]
+fn test_parse_addaiyd() {
+    assert_op!(vec![0xFD, 0x86, 1], 3, Opcode::ADDAIYD(1));
+}
+
+#[test]
+fn test_parse_subar() {
+    assert_op!(vec![0b10010111], 1, Opcode::SUBAR(Reg::A));
+}
+
+#[test]
+fn test_parse_suban() {
+    assert_op!(vec![0xD6, 1], 2, Opcode::SUBAN(1));
+}
+
+#[test]
+fn test_parse_subahl() {
+    assert_op!(vec![0x96], 1, Opcode::SUBAHL);
+}
+
+#[test]
+fn test_parse_subaixd() {
+    assert_op!(vec![0xDD, 0x96, 1], 3, Opcode::SUBAIXD(1));
+}
+
+#[test]
+fn test_parse_subaiyd() {
+    assert_op!(vec![0xFD, 0x96, 1], 3, Opcode::SUBAIYD(1));
+}
