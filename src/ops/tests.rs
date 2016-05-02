@@ -467,3 +467,43 @@ fn test_parse_cpaixd() {
 fn test_parse_cpaiyd() {
     assert_op!(vec![0xFD, 0xBE, 1], 3, Opcode::CPAIYD(1));
 }
+
+#[test]
+fn test_parse_incr() {
+    assert_op!(vec![0b00111100], 1, Opcode::INCR(Reg::A));
+}
+
+#[test]
+fn test_parse_inchl() {
+    assert_op!(vec![0x34], 1, Opcode::INCHL);
+}
+
+#[test]
+fn test_parse_incixd() {
+    assert_op!(vec![0xDD, 0x34, 1], 3, Opcode::INCIXD(1));
+}
+
+#[test]
+fn test_parse_inciyd() {
+    assert_op!(vec![0xFD, 0x34, 1], 3, Opcode::INCIYD(1));
+}
+
+#[test]
+fn test_parse_decr() {
+    assert_op!(vec![0b00111101], 1, Opcode::DECR(Reg::A));
+}
+
+#[test]
+fn test_parse_dechl() {
+    assert_op!(vec![0x35], 1, Opcode::DECHL);
+}
+
+#[test]
+fn test_parse_decixd() {
+    assert_op!(vec![0xDD, 0x35, 1], 3, Opcode::DECIXD(1));
+}
+
+#[test]
+fn test_parse_deciyd() {
+    assert_op!(vec![0xFD, 0x35, 1], 3, Opcode::DECIYD(1));
+}

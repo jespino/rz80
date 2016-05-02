@@ -65,6 +65,8 @@ pub fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
             let byte2 = code.next().unwrap() as u16;
             (3, Opcode::LDANN(byte1 + byte2))
         },
+        0x34 => (1, Opcode::INCHL),
+        0x35 => (1, Opcode::DECHL),
         0x36 => (2, Opcode::LDHLN(code.next().unwrap())),
         0x86 => (1, Opcode::ADDAHL),
         0x96 => (1, Opcode::SUBAHL),
@@ -143,9 +145,10 @@ pub fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
                         code.next().unwrap(),
                     ))
                 },
+                0x34 => (3, Opcode::INCIXD(code.next().unwrap())),
+                0x35 => (3, Opcode::DECIXD(code.next().unwrap())),
                 0x86 => (3, Opcode::ADDAIXD(code.next().unwrap())),
                 0x96 => (3, Opcode::SUBAIXD(code.next().unwrap())),
-
                 0x9E => (3, Opcode::SBCAIXD(code.next().unwrap())),
                 0xA6 => (3, Opcode::ANDAIXD(code.next().unwrap())),
                 0xAE => (3, Opcode::XORAIXD(code.next().unwrap())),
@@ -197,6 +200,8 @@ pub fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
                         code.next().unwrap(),
                     ))
                 },
+                0x34 => (3, Opcode::INCIYD(code.next().unwrap())),
+                0x35 => (3, Opcode::DECIYD(code.next().unwrap())),
                 0x86 => (3, Opcode::ADDAIYD(code.next().unwrap())),
                 0x96 => (3, Opcode::SUBAIYD(code.next().unwrap())),
                 0x9E => (3, Opcode::SBCAIYD(code.next().unwrap())),
@@ -282,6 +287,16 @@ pub fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
                 (2, Opcode::LDRN(
                     bits_to_reg(r11, r12, r13),
                     code.next().unwrap(),
+                ))
+            },
+            (0, 0, r11, r12, r13, 1, 0, 0) => {
+                (1, Opcode::INCR(
+                    bits_to_reg(r11, r12, r13),
+                ))
+            },
+            (0, 0, r11, r12, r13, 1, 0, 1) => {
+                (1, Opcode::DECR(
+                    bits_to_reg(r11, r12, r13),
                 ))
             },
             (0, 0, d1, d2, 0, 0, 0, 1) => {
