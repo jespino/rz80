@@ -68,8 +68,18 @@ pub fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
         0x36 => (2, Opcode::LDHLN(code.next().unwrap())),
         0x86 => (1, Opcode::ADDAHL),
         0x96 => (1, Opcode::SUBAHL),
+        0x9E => (1, Opcode::SBCAHL),
+        0xA6 => (1, Opcode::ANDAHL),
+        0xAE => (1, Opcode::XORAHL),
+        0xB6 => (1, Opcode::ORAHL),
+        0xBE => (1, Opcode::CPAHL),
         0xC6 => (2, Opcode::ADDAN(code.next().unwrap())),
         0xD6 => (2, Opcode::SUBAN(code.next().unwrap())),
+        0xDE => (2, Opcode::SBCAN(code.next().unwrap())),
+        0xE6 => (2, Opcode::ANDAN(code.next().unwrap())),
+        0xEE => (2, Opcode::XORAN(code.next().unwrap())),
+        0xF6 => (2, Opcode::ORAN(code.next().unwrap())),
+        0xFE => (2, Opcode::CPAN(code.next().unwrap())),
         0xD9 => (1, Opcode::EXX),
         0xE3 => (1, Opcode::EXSPHL),
         0xEB => (1, Opcode::EXDEHL),
@@ -135,6 +145,13 @@ pub fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
                 },
                 0x86 => (3, Opcode::ADDAIXD(code.next().unwrap())),
                 0x96 => (3, Opcode::SUBAIXD(code.next().unwrap())),
+
+                0x9E => (3, Opcode::SBCAIXD(code.next().unwrap())),
+                0xA6 => (3, Opcode::ANDAIXD(code.next().unwrap())),
+                0xAE => (3, Opcode::XORAIXD(code.next().unwrap())),
+                0xB6 => (3, Opcode::ORAIXD(code.next().unwrap())),
+                0xBE => (3, Opcode::CPAIXD(code.next().unwrap())),
+
                 0xE1 => (2, Opcode::POPIX),
                 0xE3 => (2, Opcode::EXSPIX),
                 0xE5 => (2, Opcode::PUSHIX),
@@ -182,6 +199,11 @@ pub fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
                 },
                 0x86 => (3, Opcode::ADDAIYD(code.next().unwrap())),
                 0x96 => (3, Opcode::SUBAIYD(code.next().unwrap())),
+                0x9E => (3, Opcode::SBCAIYD(code.next().unwrap())),
+                0xA6 => (3, Opcode::ANDAIYD(code.next().unwrap())),
+                0xAE => (3, Opcode::XORAIYD(code.next().unwrap())),
+                0xB6 => (3, Opcode::ORAIYD(code.next().unwrap())),
+                0xBE => (3, Opcode::CPAIYD(code.next().unwrap())),
                 0xE1 => (2, Opcode::POPIY),
                 0xE3 => (2, Opcode::EXSPIY),
                 0xE5 => (2, Opcode::PUSHIY),
@@ -212,6 +234,31 @@ pub fn parse_op(code: &mut Iterator<Item=u8>) -> (u8, Opcode) {
             },
             (1, 0, 0, 1, 0, r11, r12, r13) => {
                 (1, Opcode::SUBAR(
+                    bits_to_reg(r11, r12, r13),
+                ))
+            },
+            (1, 0, 0, 1, 1, r11, r12, r13) => {
+                (1, Opcode::SBCAR(
+                    bits_to_reg(r11, r12, r13),
+                ))
+            },
+            (1, 0, 1, 0, 0, r11, r12, r13) => {
+                (1, Opcode::ANDAR(
+                    bits_to_reg(r11, r12, r13),
+                ))
+            },
+            (1, 0, 1, 0, 1, r11, r12, r13) => {
+                (1, Opcode::XORAR(
+                    bits_to_reg(r11, r12, r13),
+                ))
+            },
+            (1, 0, 1, 1, 0, r11, r12, r13) => {
+                (1, Opcode::ORAR(
+                    bits_to_reg(r11, r12, r13),
+                ))
+            },
+            (1, 0, 1, 1, 1, r11, r12, r13) => {
+                (1, Opcode::CPAR(
                     bits_to_reg(r11, r12, r13),
                 ))
             },

@@ -342,3 +342,128 @@ fn test_parse_subaixd() {
 fn test_parse_subaiyd() {
     assert_op!(vec![0xFD, 0x96, 1], 3, Opcode::SUBAIYD(1));
 }
+
+#[test]
+fn test_parse_sbcar() {
+    assert_op!(vec![0b10011111], 1, Opcode::SBCAR(Reg::A));
+}
+
+#[test]
+fn test_parse_sbcan() {
+    assert_op!(vec![0xDE, 1], 2, Opcode::SBCAN(1));
+}
+
+#[test]
+fn test_parse_sbcahl() {
+    assert_op!(vec![0x9E], 1, Opcode::SBCAHL);
+}
+
+#[test]
+fn test_parse_sbcaixd() {
+    assert_op!(vec![0xDD, 0x9E, 1], 3, Opcode::SBCAIXD(1));
+}
+
+#[test]
+fn test_parse_sbcaiyd() {
+    assert_op!(vec![0xFD, 0x9E, 1], 3, Opcode::SBCAIYD(1));
+}
+
+#[test]
+fn test_parse_andar() {
+    assert_op!(vec![0b10100111], 1, Opcode::ANDAR(Reg::A));
+}
+
+#[test]
+fn test_parse_andan() {
+    assert_op!(vec![0xE6, 1], 2, Opcode::ANDAN(1));
+}
+
+#[test]
+fn test_parse_andahl() {
+    assert_op!(vec![0xA6], 1, Opcode::ANDAHL);
+}
+
+#[test]
+fn test_parse_andaixd() {
+    assert_op!(vec![0xDD, 0xA6, 1], 3, Opcode::ANDAIXD(1));
+}
+
+#[test]
+fn test_parse_andaiyd() {
+    assert_op!(vec![0xFD, 0xA6, 1], 3, Opcode::ANDAIYD(1));
+}
+
+#[test]
+fn test_parse_orar() {
+    assert_op!(vec![0b10110111], 1, Opcode::ORAR(Reg::A));
+}
+
+#[test]
+fn test_parse_oran() {
+    assert_op!(vec![0xF6, 1], 2, Opcode::ORAN(1));
+}
+
+#[test]
+fn test_parse_orahl() {
+    assert_op!(vec![0xB6], 1, Opcode::ORAHL);
+}
+
+#[test]
+fn test_parse_oraixd() {
+    assert_op!(vec![0xDD, 0xB6, 1], 3, Opcode::ORAIXD(1));
+}
+
+#[test]
+fn test_parse_oraiyd() {
+    assert_op!(vec![0xFD, 0xB6, 1], 3, Opcode::ORAIYD(1));
+}
+
+#[test]
+fn test_parse_xorar() {
+    assert_op!(vec![0b10101111], 1, Opcode::XORAR(Reg::A));
+}
+
+#[test]
+fn test_parse_xoran() {
+    assert_op!(vec![0xEE, 1], 2, Opcode::XORAN(1));
+}
+
+#[test]
+fn test_parse_xorahl() {
+    assert_op!(vec![0xAE], 1, Opcode::XORAHL);
+}
+
+#[test]
+fn test_parse_xoraixd() {
+    assert_op!(vec![0xDD, 0xAE, 1], 3, Opcode::XORAIXD(1));
+}
+
+#[test]
+fn test_parse_xoraiyd() {
+    assert_op!(vec![0xFD, 0xAE, 1], 3, Opcode::XORAIYD(1));
+}
+
+#[test]
+fn test_parse_cpar() {
+    assert_op!(vec![0b10111111], 1, Opcode::CPAR(Reg::A));
+}
+
+#[test]
+fn test_parse_cpan() {
+    assert_op!(vec![0xFE, 1], 2, Opcode::CPAN(1));
+}
+
+#[test]
+fn test_parse_cpahl() {
+    assert_op!(vec![0xBE], 1, Opcode::CPAHL);
+}
+
+#[test]
+fn test_parse_cpaixd() {
+    assert_op!(vec![0xDD, 0xBE, 1], 3, Opcode::CPAIXD(1));
+}
+
+#[test]
+fn test_parse_cpaiyd() {
+    assert_op!(vec![0xFD, 0xBE, 1], 3, Opcode::CPAIYD(1));
+}
